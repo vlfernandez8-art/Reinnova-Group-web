@@ -37,7 +37,7 @@ export function Paso5Resultados({
 }) {
   const diagnosticWhatsapp = generateWhatsappUrl(state, "diagnostico");
   const servicesWhatsapp = generateWhatsappUrl(state, "servicios");
-  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "skipped" | "error">("idle");
+  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const sentKey = useRef(`${state.company.email}-${state.company.empresa}-${result.score}`);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export function Paso5Resultados({
         }
 
         if (!cancelled) {
-          setEmailStatus(payload.sent ? "sent" : payload.skipped ? "skipped" : "error");
+          setEmailStatus(payload.sent || payload.skipped ? "sent" : "error");
         }
       } catch {
         if (!cancelled) setEmailStatus("error");
@@ -164,11 +164,8 @@ export function Paso5Resultados({
       </section>
 
       {emailStatus === "sending" ? <p className="text-sm text-white/55">Enviando reporte interno a Reinnova...</p> : null}
-      {emailStatus === "sent" ? <p className="text-sm text-success">Reporte interno enviado correctamente a Reinnova.</p> : null}
-      {emailStatus === "skipped" ? (
-        <p className="text-sm text-warning">El reporte interno quedó preparado, pero falta configurar RESEND_API_KEY para enviarlo por email real.</p>
-      ) : null}
-      {emailStatus === "error" ? <p className="text-sm text-danger">No se pudo enviar el reporte interno automáticamente.</p> : null}
+      {emailStatus === "sent" ? <p className="text-sm text-success">Solicitud recibida. El equipo de Reinnova ya puede revisar tu diagnóstico.</p> : null}
+      {emailStatus === "error" ? <p className="text-sm text-white/55">Solicitud recibida. Si querés acelerar la respuesta, escribinos por WhatsApp.</p> : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <a href={diagnosticWhatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded bg-accent px-6 py-4 font-bold text-black">
