@@ -173,6 +173,101 @@ export const industryQuestions: Partial<Record<RubroId, DiagnosticQuestion[]>> =
   ].map(toQuestion("Gestión general")),
 };
 
+const cyberOptions = (positive: string, partial: string, weak: string, critical: string) =>
+  options([positive, partial, weak, critical]);
+
+const cyberBaseQuestion: DiagnosticQuestion = {
+  id: "cyber_backup_general",
+  block: "Cyberseguridad",
+  text: "¿Su empresa realiza copias de seguridad automáticas y verificadas de su información crítica?",
+  kind: "single",
+  options: cyberOptions("Sí, automáticas y probadas", "Automáticas sin prueba frecuente", "Manuales o esporádicas", "No tenemos backup confiable"),
+};
+
+
+const cyberRegulatoryRequirement: Partial<Record<RubroId, string>> = {
+  retail: "Ley 25.326 y defensa del consumidor",
+  gastronomia: "Ley 25.326 y normas sanitarias",
+  construccion: "Seguridad e higiene y normativa profesional",
+  salud: "Ley 25.326 y Ley 26.529",
+  "servicios-personales": "Ley 25.326 si guarda base de clientes",
+  "servicios-tecnicos": "Ley 25.326 y obligaciones del servicio",
+  logistica: "CNRT y trazabilidad por operacion",
+  "servicios-profesionales": "Secreto profesional y Ley 25.246 si aplica",
+  tecnologia: "Ley 25.326 y PCI-DSS si hay pagos",
+  "importacion-exportacion": "AFIP/Aduana y normativa cambiaria",
+  agro: "SENASA y trazabilidad sanitaria",
+  educacion: "Ley 26.206 y proteccion de datos de menores",
+  manufactura: "Normas de seguridad e higiene del sector",
+  inmobiliaria: "Ley 25.326 y normas inmobiliarias",
+  ecommerce: "Defensa del consumidor y seguridad de pagos",
+  otro: "A definir",
+};
+
+const cyberComplianceQuestion = (rubro: RubroId): DiagnosticQuestion | null => {
+  const requirement = cyberRegulatoryRequirement[rubro];
+  if (!requirement || requirement === "A definir") {
+    return {
+      id: "cyber_normativa",
+      block: "Cyberseguridad",
+      text: "Tu rubro requiere cumplimiento normativo y este tema esta definido?",
+      kind: "single",
+      options: cyberOptions(
+        "No aplica por ahora",
+        "No aplica por ahora",
+        "Aun estamos definiendo",
+        "No sabemos lo que aplica",
+      ),
+    };
+  }
+
+  return {
+    id: "cyber_normativa",
+    block: "Cyberseguridad",
+    text: `Cumplis la normativa base de tu rubro? (${requirement})`,
+    kind: "single",
+    options: cyberOptions("Si, cumplimos y esta documentado", "Parcialmente", "No esta bien implementado", "No sabia que aplicaba"),
+  };
+};
+
+const cyberIndustryQuestions: Record<RubroId, DiagnosticQuestion[]> = {
+  retail: cyberQuestions("¿El sistema de caja/stock tiene usuarios individuales y permisos por rol?", "¿Protegés los datos de clientes y medios de pago con accesos controlados?"),
+  gastronomia: cyberQuestions("¿Los sistemas de reservas, delivery y caja tienen accesos separados por usuario?", "¿Existe un plan para operar si falla internet, el POS o la plataforma de pedidos?"),
+  construccion: cyberQuestions("¿Los presupuestos, planos y contratos se guardan en repositorios con control de acceso?", "¿Tenés resguardo de documentación crítica de obras ante robo, pérdida o ransomware?"),
+  salud: cyberQuestions("¿Las historias clínicas, turnos y datos de pacientes tienen permisos y trazabilidad de acceso?", "¿Existe un protocolo para recuperar agenda e información clínica si un sistema queda fuera de línea?"),
+  "servicios-personales": cyberQuestions("¿Los datos de clientes, turnos y pagos están protegidos con usuarios y contraseñas propias?", "¿Tenés backup de agenda, fichas y caja para recuperar operación en menos de 48 horas?"),
+  "servicios-tecnicos": cyberQuestions("¿Las órdenes de trabajo, clientes y presupuestos se administran con accesos por usuario?", "¿Tenés resguardo de información técnica y documentación de clientes ante pérdida de equipos?"),
+  logistica: cyberQuestions("¿Los datos de flota, rutas y entregas están protegidos contra accesos no autorizados?", "¿Existe continuidad operativa si cae el sistema de seguimiento, facturación o coordinación?"),
+  "servicios-profesionales": cyberQuestions("¿Los documentos de clientes se almacenan con permisos, historial y doble factor?", "¿Tenés un procedimiento para responder ante fuga de información confidencial de clientes?"),
+  tecnologia: cyberQuestions("¿Usan doble factor, control de accesos y gestión de credenciales en sistemas críticos?", "¿Tienen monitoreo, backups y pruebas de recuperación para ambientes productivos?"),
+  "importacion-exportacion": cyberQuestions("¿La documentación aduanera, pagos y proveedores se comparten por canales seguros?", "¿Tenés resguardo y recuperación de documentación crítica ante pérdida o bloqueo de sistemas?"),
+  agro: cyberQuestions("¿La información de lotes, costos, maquinaria y proveedores tiene backup y control de acceso?", "¿Existe un plan para operar si se pierde acceso a sistemas de gestión, clima, stock o trazabilidad?"),
+  educacion: cyberQuestions("¿Los datos de alumnos, docentes, pagos e inscripciones están protegidos por permisos?", "¿Tenés backup y plan de recuperación para campus, legajos, cobranzas y comunicaciones?"),
+  manufactura: cyberQuestions("¿Los sistemas de producción, stock y compras tienen usuarios, permisos y respaldo?", "¿Existe continuidad operativa si cae el sistema de producción, inventario o facturación?"),
+  inmobiliaria: cyberQuestions("¿Contratos, documentación de inmuebles y datos de clientes se almacenan en canales seguros?", "¿Tenés backup y recuperación rápida de cartera, leads, reservas y documentación legal?"),
+  ecommerce: cyberQuestions("¿La tienda, pasarelas, marketplace y accesos administrativos usan doble factor?", "¿Tenés plan de recuperación si se bloquea la tienda, se fuga información o cae un canal de venta?"),
+  otro: cyberQuestions("¿Los accesos a sistemas, mails y archivos críticos están controlados por usuario?", "¿Tenés definido cómo recuperar la operación si se pierde información o se bloquean equipos?"),
+};
+
+function cyberQuestions(accessText: string, continuityText: string): DiagnosticQuestion[] {
+  return [
+    {
+      id: "cyber_accesos",
+      block: "Cyberseguridad",
+      text: accessText,
+      kind: "single",
+      options: cyberOptions("Sí, con controles claros", "Parcialmente", "Muy básico", "No está controlado"),
+    },
+    {
+      id: "cyber_continuidad",
+      block: "Cyberseguridad",
+      text: continuityText,
+      kind: "single",
+      options: cyberOptions("Sí, probado", "Existe pero no se prueba", "Depende de acciones manuales", "No existe"),
+    },
+  ];
+}
+
 function toQuestion(block: string) {
   return (value: (string | string[])[]): DiagnosticQuestion => {
     const [id, text, labels] = value as [string, string, string[]];
@@ -187,5 +282,13 @@ function toQuestion(block: string) {
 }
 
 export function getQuestionsForRubro(rubro: RubroId | "") {
-  return [...baseQuestions, ...(rubro ? industryQuestions[rubro] ?? [] : [])];
+  const normativa = rubro ? cyberComplianceQuestion(rubro) : null;
+
+  return [
+    ...baseQuestions,
+    ...(rubro ? industryQuestions[rubro] ?? [] : []),
+    cyberBaseQuestion,
+    ...(rubro ? cyberIndustryQuestions[rubro] ?? [] : []),
+    ...(normativa ? [normativa] : []),
+  ];
 }

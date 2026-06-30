@@ -8,7 +8,7 @@ export const revenueMap: Record<RevenueRange, number> = {
   "+$50M": 50000000,
 };
 
-export function calcularImpacto(facturacion: RevenueRange | "", datos: EconomicData) {
+export function calcularImpacto(facturacion: RevenueRange | "", datos: EconomicData, riesgoCyber = 0) {
   const salarioMensual = datos.salarioPromedio;
   const horasSemanalesImprod = datos.horasSemanaAdmin;
   const facturacionPromedio = facturacion ? revenueMap[facturacion] : 1250000;
@@ -19,12 +19,13 @@ export function calcularImpacto(facturacion: RevenueRange | "", datos: EconomicD
     datos.erroresMensuales * salarioMensual * 0.05 + facturacionPromedio * errorRevenueFactor(datos.erroresMensuales);
   const riesgoPorDecisionesTardias =
     facturacionPromedio * (balanceDelayFactor(datos.demoraBalance) + lostSalesFactor(datos.ventasPerdidas));
-  const total = costoMensualHoras + costoErrores + riesgoPorDecisionesTardias;
+  const total = costoMensualHoras + costoErrores + riesgoPorDecisionesTardias + riesgoCyber;
 
   return {
     costo_horas: Math.round(costoMensualHoras),
     costo_errores: Math.round(costoErrores),
     riesgo_decision: Math.round(riesgoPorDecisionesTardias),
+    riesgo_cyber: Math.round(riesgoCyber),
     total_mensual: Math.round(total),
     total_anual: Math.round(total * 12),
   };

@@ -101,6 +101,33 @@ El flujo incluye:
 - Envío automático de reporte PDF interno vía Resend
 - CTAs a WhatsApp para diagnóstico profesional y servicios
 
+## MÃ³dulo de Eventos y acceso interno
+
+Se agregÃ³ la secciÃ³n de eventos en la home y un panel interno para cargar capacitaciones.
+
+Rutas sugeridas:
+
+- Home: secciÃ³n `Eventos` integrada en `src/app/page.tsx` y ruta `/eventos`.
+- Login interno: `/soy-reinnova/login`.
+- Admin eventos: `/soy-reinnova/admin/eventos`.
+- Crear/editar: `/soy-reinnova/admin/eventos/nuevo`, `/soy-reinnova/admin/eventos/:id`.
+- Inscriptos: `/soy-reinnova/admin/eventos/:id/inscriptos`.
+- CSV: descarga directa desde ese bloque (`/api/admin/events/:id/registrations/csv`).
+
+Variables nuevas:
+
+- `ADMIN_EMAILS`
+- `ADMIN_TEMP_PASSWORD`
+- `ADMIN_SESSION_TTL_SECONDS`
+- `ADMIN_PASSWORD_PEPPER` (opcional)
+
+Para probar:
+
+1. Levantar con `npm run dev -- --port 5185`.
+2. Ingresar a `/soy-reinnova/login` con cualquiera de los mails de `ADMIN_EMAILS` y `ADMIN_TEMP_PASSWORD`.
+3. Crear una capacitaciÃ³n en borrador y luego publicarla.
+4. Probar inscripciÃ³n desde home o `/eventos`.
+
 ## Reinnova Group
 
 Reinnova Group desarrolla plataformas SaaS y automatizaciones para mejorar la eficiencia operativa en contabilidad, obra, campo y talento. El sitio integra el ecosistema de soluciones Reinnova Group con un diagnóstico inicial orientado a detectar oportunidades de mejora y priorizar implementación.

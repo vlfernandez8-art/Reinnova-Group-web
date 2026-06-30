@@ -5,11 +5,44 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CompanyData } from "@/lib/types";
 
+const blockedEmailDomains = new Set([
+  "example.com",
+  "example.org",
+  "example.net",
+  "test.com",
+  "mailinator.com",
+  "tempmail.com",
+  "temp-mail.org",
+  "10minutemail.com",
+  "guerrillamail.com",
+  "yopmail.com",
+  "discard.email",
+  "fakeinbox.com",
+]);
+
+function isLikelyRealEmail(value: string) {
+  const email = value.trim().toLowerCase();
+  const match = email.match(/^([a-z0-9.!#$%&'*+/=?^_`{|}~-]+)@([a-z0-9-]+(?:\.[a-z0-9-]+)+)$/i);
+  if (!match) return false;
+
+  const [, localPart, domain] = match;
+  const domainParts = domain.split(".");
+  const tld = domainParts.at(-1) ?? "";
+
+  if (blockedEmailDomains.has(domain)) return false;
+  if (localPart.length < 2 || localPart.includes("..")) return false;
+  if (["test", "prueba", "demo", "fake", "noemail", "sincorreo"].includes(localPart)) return false;
+  if (domainParts.some((part) => part.length < 2 || part.startsWith("-") || part.endsWith("-"))) return false;
+  if (tld.length < 2 || /^\d+$/.test(tld)) return false;
+
+  return true;
+}
+
 const schema = z.object({
   empresa: z.string().min(2, "Ingresá el nombre de la empresa"),
   nombre: z.string().min(2, "Ingresá tu nombre"),
   cargo: z.string().min(2, "Ingresá tu cargo"),
-  email: z.string().email("Ingresá un email válido"),
+  email: z.string().trim().email("Ingresa un email valido").refine(isLikelyRealEmail, "Ingresa un email real de contacto"),
   whatsapp: z.string().optional(),
   empleados: z.string().min(1, "Seleccioná cantidad de empleados"),
   facturacion: z.string().min(1, "Seleccioná facturación"),
@@ -126,3 +159,4 @@ function ChoiceGroup<T extends string>({
     </div>
   );
 }
+

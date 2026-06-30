@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, RotateCcw } from "lucide-react";
 import { currency } from "@/lib/calcularImpacto";
-import { maturityLevels, solutionColumns } from "@/lib/scoring";
+import { maturityLevels } from "@/lib/scoring";
 import { DiagnosticResult, DiagnosticoState } from "@/lib/types";
 
 const urgencyClasses = {
@@ -114,26 +114,53 @@ export function Paso5Resultados({
         <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
           <Gauge value={result.maturityScore} />
           <div>
-            <h3 className="font-heading text-2xl font-bold">Impacto económico estimado</h3>
+            <h3 className="font-heading text-2xl font-bold">Impacto economico estimado</h3>
             <div className="mt-5 grid gap-3">
               <Row label="Horas improductivas" value={`${currency(result.impact.costo_horas)} / mes`} />
               <Row label="Errores y reprocesos" value={`${currency(result.impact.costo_errores)} / mes`} />
-              <Row label="Decisiones sin información" value={`${currency(result.impact.riesgo_decision)} / mes`} />
+              <Row label="Decisiones sin informacion" value={`${currency(result.impact.riesgo_decision)} / mes`} />
+              <Row label="Riesgo de Cyberseguridad" value={`${currency(result.impact.riesgo_cyber)} / mes`} />
             </div>
             <div className="mt-5 border-t border-white/10 pt-5">
               <p className="font-heading text-3xl font-bold">{currency(result.impact.total_mensual)} / mes</p>
-              <p className="mt-1 text-xl text-white/70">{currency(result.impact.total_anual)} / año</p>
+              <p className="mt-1 text-xl text-white/70">{currency(result.impact.total_anual)} / ano</p>
               <p className="mt-3 text-sm text-white/48">
-                Estimación conservadora basada en tus respuestas y en el volumen de facturación informado.
+                Estimacion conservadora basada en tus respuestas, el volumen de facturacion informado y el riesgo cyber detectado.
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      <section className="glass rounded-lg p-6">
+        <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
+          <Gauge value={result.cyberRisk.maturityScore} label="madurez cyber" />
+          <div>
+            <h3 className="font-heading text-2xl font-bold">Riesgo de cyberseguridad</h3>
+            <div className="mt-5 grid gap-3">
+              <Row label="Riesgo de fuga de datos" value={result.cyberRisk.dataLeakRiskLevel} />
+              <Row label="Tiempo estimado de recuperacion" value={`${result.cyberRisk.recoveryDays} dias`} />
+              <Row label="Sueldos por dias improductivos" value={currency(result.cyberRisk.recoveryCost.salariosDiasImproductivos)} />
+              <Row label="Perdida de ventas estimada" value={currency(result.cyberRisk.recoveryCost.perdidaVentas)} />
+              <Row label="Costo por resolucion" value={currency(result.cyberRisk.recoveryCost.resolucion)} />
+            </div>
+            <div className="mt-5 border-t border-white/10 pt-5">
+              <p className="font-heading text-3xl font-bold">{currency(result.cyberRisk.recoveryCost.total)}</p>
+              <p className="mt-1 text-xl text-white/70">Costo estimado de recuperacion ante incidente</p>
+              <p className="mt-3 text-sm text-white/48">
+                Impacto mensual ponderado: {currency(result.cyberRisk.monthlyImpact)} / mes. Este monto ya esta incluido en el impacto economico total.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
       <section>
         <h3 className="font-heading text-2xl font-bold">Los 3 puntos de dolor principales</h3>
-        <p className="mt-2 text-sm text-white/55">Los montos asignados suman el total del impacto económico mensual estimado.</p>
+        <p className="mt-2 text-sm text-white/55">
+          Los montos asignados suman el total del impacto economico mensual estimado, incluyendo riesgo de cyberseguridad cuando corresponde.
+        </p>
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
           {result.dolores.map((dolor, index) => (
             <article key={dolor.block} className="glow-card rounded-lg border border-white/10 bg-white/[0.035] p-5">
@@ -147,9 +174,9 @@ export function Paso5Resultados({
       </section>
 
       <section className="rounded-lg border border-white/10 bg-white/[0.035] p-6">
-        <h3 className="font-heading text-2xl font-bold">Solución propuesta</h3>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          {solutionColumns.map((column) => (
+        <h3 className="font-heading text-2xl font-bold">Solucion propuesta</h3>
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          {result.solutionColumns.map((column) => (
             <article key={column.title} className="glow-card rounded-lg border border-white/10 bg-black/20 p-5">
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-accent">{column.title}</p>
               <h4 className="mt-3 font-heading text-xl font-bold">{column.subtitle}</h4>
@@ -164,13 +191,13 @@ export function Paso5Resultados({
       </section>
 
       {emailStatus === "sending" ? <p className="text-sm text-white/55">Enviando reporte interno a Reinnova...</p> : null}
-      {emailStatus === "sent" ? <p className="text-sm text-success">Solicitud recibida. El equipo de Reinnova ya puede revisar tu diagnóstico.</p> : null}
-      {emailStatus === "error" ? <p className="text-sm text-white/55">Solicitud recibida. Si querés acelerar la respuesta, escribinos por WhatsApp.</p> : null}
+      {emailStatus === "sent" ? <p className="text-sm text-success">Solicitud recibida. El equipo de Reinnova ya puede revisar tu diagnostico.</p> : null}
+      {emailStatus === "error" ? <p className="text-sm text-white/55">Solicitud recibida. Si queres acelerar la respuesta, escribinos por WhatsApp.</p> : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <a href={diagnosticWhatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded bg-accent px-6 py-4 font-bold text-black">
           <MessageCircle size={18} />
-          Quiero mi diagnóstico profesional gratuito
+          Quiero mi diagnostico profesional gratuito
         </a>
         <a href={servicesWhatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded border border-white/16 px-6 py-4 font-bold">
           <MessageCircle size={18} />
@@ -184,7 +211,7 @@ export function Paso5Resultados({
         </button>
         <button className="inline-flex items-center justify-center gap-2 rounded border border-white/12 px-6 py-4 font-bold" onClick={onReset} type="button">
           <RotateCcw size={18} />
-          Reiniciar diagnóstico
+          Reiniciar diagnostico
         </button>
       </div>
     </div>
@@ -200,7 +227,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Gauge({ value }: { value: number }) {
+function Gauge({ value, label = "madurez" }: { value: number; label?: string }) {
   const radius = 82;
   const circumference = 2 * Math.PI * radius;
   const dash = (value / 100) * circumference;
@@ -208,7 +235,7 @@ function Gauge({ value }: { value: number }) {
 
   return (
     <div className="grid place-items-center">
-      <svg width="190" height="190" viewBox="0 0 190 190" role="img" aria-label={`Madurez ${value}%`}>
+      <svg width="190" height="190" viewBox="0 0 190 190" role="img" aria-label={`${label} ${value}%`}>
         <circle cx="95" cy="95" r={radius} fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="14" />
         <circle
           cx="95"
@@ -225,7 +252,7 @@ function Gauge({ value }: { value: number }) {
           {value}%
         </text>
         <text x="95" y="122" textAnchor="middle" fill="#8892A4" fontSize="12">
-          madurez
+          {label}
         </text>
       </svg>
     </div>

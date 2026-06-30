@@ -80,8 +80,29 @@ export type ImpactoEconomico = {
   costo_horas: number;
   costo_errores: number;
   riesgo_decision: number;
+  riesgo_cyber: number;
   total_mensual: number;
   total_anual: number;
+};
+
+export type CyberRiskResult = {
+  maturityScore: number;
+  dataLeakRiskLevel: "Bajo" | "Medio" | "Alto" | "Critico";
+  recoveryDays: number;
+  monthlyImpact: number;
+  annualImpact: number;
+  recoveryCost: {
+    salariosDiasImproductivos: number;
+    perdidaVentas: number;
+    resolucion: number;
+    total: number;
+  };
+  recommendations: string[];
+  sysemcPlan: {
+    name: string;
+    description: string;
+    actions: string[];
+  };
 };
 
 export type PainPoint = {
@@ -91,9 +112,16 @@ export type PainPoint = {
   monthlyCost: number;
 };
 
+export type SolutionColumn = {
+  title: string;
+  subtitle: string;
+  items: string[];
+};
+
 export type DiagnosticResult = {
   score: number;
   maturityScore: number;
+  cyberRisk: CyberRiskResult;
   perfil: MaturityChoice;
   perfilTitulo: string;
   urgencia: {
@@ -102,4 +130,5 @@ export type DiagnosticResult = {
   };
   impact: ImpactoEconomico;
   dolores: PainPoint[];
+  solutionColumns: SolutionColumn[];
 };

@@ -8,8 +8,8 @@ import { ArrowRight, Menu, X } from "lucide-react";
 const links = [
   { href: "/#inicio", label: "Inicio" },
   { href: "/#servicios", label: "Servicios" },
-  { href: "/#metodologia", label: "Metodología" },
-  { href: "/diagnostico", label: "Diagnóstico" },
+  { href: "/#metodologia", label: "Metodologia" },
+  { href: "/diagnostico", label: "Diagnostico" },
   { href: "/#contacto", label: "Contacto" },
 ];
 
@@ -30,8 +30,8 @@ export function Navbar() {
         scrolled ? "border-b border-white/10 bg-black/70 backdrop-blur-xl" : "bg-transparent"
       }`}
     >
-      <nav className="section-shell flex h-20 items-center justify-between">
-        <Link href="/" className="focus-ring relative h-12 w-56 overflow-hidden rounded-md md:w-72 lg:w-80">
+      <nav className="section-shell flex h-20 items-center justify-between gap-5">
+        <Link href="/" className="focus-ring relative h-12 w-56 shrink-0 overflow-hidden rounded-md md:w-72 xl:w-80">
           <Image
             src="/reinnova-group-logo.png"
             alt="Reinnova Group"
@@ -42,25 +42,36 @@ export function Navbar() {
           />
         </Link>
 
-        <div className="hidden items-center gap-7 lg:flex">
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-4 xl:flex 2xl:gap-7">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="text-sm text-white/72 transition hover:text-white">
+            <Link key={link.href} href={link.href} className="whitespace-nowrap text-sm text-white/72 transition hover:text-white">
               {link.label}
             </Link>
           ))}
+          <Link href="/eventos" className="whitespace-nowrap text-sm text-white/72 transition hover:text-white">
+            Eventos
+          </Link>
         </div>
 
-        <Link
-          href="/diagnostico"
-          className="hidden items-center gap-2 rounded bg-accent px-4 py-3 text-sm font-bold text-black transition hover:bg-white lg:flex"
-        >
-          Iniciá tu Diagnóstico Gratuito
-          <ArrowRight size={16} />
-        </Link>
+        <div className="hidden shrink-0 items-center gap-2 xl:flex">
+          <Link
+            href="/diagnostico"
+            className="inline-flex items-center gap-2 whitespace-nowrap rounded bg-accent px-4 py-3 text-sm font-bold text-black transition hover:bg-white"
+          >
+            Inicia tu Diagnostico Gratuito
+            <ArrowRight size={16} />
+          </Link>
+          <Link
+            href="/soy-reinnova/login"
+            className="whitespace-nowrap rounded border border-accent px-4 py-3 text-sm font-bold text-accent transition hover:bg-accent hover:text-black"
+          >
+            Soy Reinnova
+          </Link>
+        </div>
 
         <button
-          aria-label="Abrir menú"
-          className="grid h-11 w-11 place-items-center rounded border border-white/12 lg:hidden"
+          aria-label="Abrir menu"
+          className="grid h-11 w-11 place-items-center rounded border border-white/12 xl:hidden"
           onClick={() => setOpen((value) => !value)}
         >
           {open ? <X size={20} /> : <Menu size={20} />}
@@ -80,6 +91,27 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/eventos"
+              className="rounded border border-white/10 px-4 py-3 text-white/80"
+              onClick={() => setOpen(false)}
+            >
+              Eventos
+            </Link>
+            <Link
+              href="/diagnostico"
+              className="rounded bg-accent/90 px-4 py-3 text-center font-bold text-black"
+              onClick={() => setOpen(false)}
+            >
+              Inicia tu Diagnostico Gratuito
+            </Link>
+            <Link
+              href="/soy-reinnova/login"
+              className="rounded border border-accent px-4 py-3 text-accent"
+              onClick={() => setOpen(false)}
+            >
+              Soy Reinnova
+            </Link>
           </div>
         </div>
       ) : null}

@@ -1,0 +1,26 @@
+{
+  "events": [],
+  "registrations": [],
+  "adminUsers": [
+    {
+      "id": "856b6967-0c9b-44d1-8769-1f364d200ce5",
+      "email": "cmontesino@reinnova.com.ar",
+      "passwordHash": "8a658aea9e6d81ca93b8faffdbb0a394:031f080cef94daf0f18d17c9da8d7fba332a575939f5a72df923c9350eb7a0c2e6f5768bfdee652d4af4b45be5cafba38d2dac567edf449aa8a162b831f9ca9c",
+      "createdAt": "2026-06-17T21:17:20.374Z"
+    },
+    {
+      "id": "423f46aa-66a0-463c-976a-a99bac14d7c9",
+      "email": "vfernandez@reinnova.com.ar",
+      "passwordHash": "21f0b325e7d7afaa1b6dfb6f4aa9bf02:8b05d2ef277e81e8075f3f4135736678973178f2df4c1f2f599e99b8ff3eab4207c18f3ab76f9baa9ae9471a54aedb3221a17e1d54003d079b69334c0bfdf35d",
+      "createdAt": "2026-06-17T21:17:20.415Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "efa916dc-8e48-44a8-81eb-f154c4ce188c",
+      "adminUserId": "856b6967-0c9b-44d1-8769-1f364d200ce5",
+      "createdAt": "2026-06-30T00:27:27.547Z",
+      "expiresAt": "2026-07-01T00:27:27.547Z"
+    }
+  ]
+}
