@@ -70,3 +70,22 @@ export type AdminSessionRecord = {
   expiresAt: string;
   createdAt: string;
 };
+
+export type DiagnosticSurveyRecord = {
+  id: string;
+  createdAt: string;
+  rubro: string;
+  rubroOtro?: string;
+  empleados: string;
+  facturacion: string;
+  perfil: string;
+  perfilTitulo: string;
+  maturityScore: number;
+  totalImpactMonthly: number;
+  totalImpactAnnual: number;
+  cyberMaturityScore: number;
+  cyberRiskLevel: string;
+  cyberRecoveryDays: number;
+  cyberImpactMonthly: number;
+  cyberImpactAnnual: number;
+};

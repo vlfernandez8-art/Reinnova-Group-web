@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import {
   type AdminSessionRecord,
   type AdminUserRecord,
+  type DiagnosticSurveyRecord,
   type EventPayload,
   type EventRecord,
   type EventStatus,
@@ -17,12 +18,14 @@ import {
   type RegistrationPayload,
   type RegistrationRecord,
 } from "@/lib/eventsTypes";
+import { type DiagnosticResult, type DiagnosticoState } from "@/lib/types";
 
 type EventsDb = {
   events: EventRecord[];
   registrations: RegistrationRecord[];
   adminUsers: AdminUserRecord[];
   sessions: AdminSessionRecord[];
+  diagnosticSurveys: DiagnosticSurveyRecord[];
 };
 
 const DB_DIR = path.join(process.cwd(), "data");
@@ -83,6 +86,7 @@ async function resolveDbPath(): Promise<string> {
         registrations: [],
         adminUsers: [],
         sessions: [],
+        diagnosticSurveys: [],
       };
       await writeFile(candidate, JSON.stringify(seedDb, null, 2), "utf8");
       cachedDbPath = candidate;
@@ -101,6 +105,7 @@ function getSeedDb(): EventsDb {
     registrations: [],
     adminUsers: [],
     sessions: [],
+    diagnosticSurveys: [],
   };
 }
 
@@ -194,6 +199,7 @@ async function readDb(): Promise<EventsDb> {
       registrations: parsed.registrations ?? [],
       adminUsers: parsed.adminUsers ?? [],
       sessions: parsed.sessions ?? [],
+      diagnosticSurveys: parsed.diagnosticSurveys ?? [],
     });
   } catch {
     const created = await writeDb(getSeedDb());
@@ -233,6 +239,16 @@ async function writeDb(db: EventsDb): Promise<EventsDb> {
     sessions: db.sessions.map((item) => ({
       ...item,
       adminUserId: item.adminUserId,
+    })),
+    diagnosticSurveys: (db.diagnosticSurveys ?? []).map((item) => ({
+      ...item,
+      rubro: item.rubro.trim(),
+      rubroOtro: item.rubroOtro?.trim(),
+      empleados: item.empleados.trim(),
+      facturacion: item.facturacion.trim(),
+      perfil: item.perfil.trim(),
+      perfilTitulo: item.perfilTitulo.trim(),
+      cyberRiskLevel: item.cyberRiskLevel.trim(),
     })),
   });
 
@@ -473,6 +489,90 @@ export async function buildCsvForRegistrations(eventId: string) {
       quoteCsvValue(event.title),
     ].join(","),
   );
+  return [header, ...rows].join("\n");
+}
+
+export async function recordDiagnosticSurvey(state: DiagnosticoState, result: DiagnosticResult): Promise<DiagnosticSurveyRecord> {
+  const db = await readDb();
+  const survey: DiagnosticSurveyRecord = {
+    id: createId(),
+    createdAt: now(),
+    rubro: state.profile.rubro || "sin-rubro",
+    rubroOtro: state.profile.rubroOtro?.trim() || undefined,
+    empleados: state.company.empleados || "No informado",
+    facturacion: state.company.facturacion || "No informada",
+    perfil: result.perfil,
+    perfilTitulo: result.perfilTitulo,
+    maturityScore: result.maturityScore,
+    totalImpactMonthly: result.impact.total_mensual,
+    totalImpactAnnual: result.impact.total_anual,
+    cyberMaturityScore: result.cyberRisk.maturityScore,
+    cyberRiskLevel: result.cyberRisk.dataLeakRiskLevel,
+    cyberRecoveryDays: result.cyberRisk.recoveryDays,
+    cyberImpactMonthly: result.cyberRisk.monthlyImpact,
+    cyberImpactAnnual: result.cyberRisk.annualImpact,
+  };
+
+  db.diagnosticSurveys.push(survey);
+  await writeDb(db);
+  return survey;
+}
+
+export async function getDiagnosticSurveys(filters?: { from?: string | null; to?: string | null; rubro?: string | null }) {
+  const db = await readDb();
+  const from = filters?.from ? new Date(`${filters.from}T00:00:00`).getTime() : null;
+  const to = filters?.to ? new Date(`${filters.to}T23:59:59`).getTime() : null;
+  const rubro = filters?.rubro?.trim();
+
+  return db.diagnosticSurveys
+    .filter((item) => {
+      const created = new Date(item.createdAt).getTime();
+      if (from && created < from) return false;
+      if (to && created > to) return false;
+      if (rubro && rubro !== "todos" && item.rubro !== rubro) return false;
+      return true;
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(stripUndefined);
+}
+
+export async function buildCsvForDiagnosticSurveys(filters?: { from?: string | null; to?: string | null; rubro?: string | null }) {
+  const surveys = await getDiagnosticSurveys(filters);
+  const header = [
+    "fecha",
+    "rubro",
+    "rubro_otro",
+    "empleados",
+    "facturacion",
+    "perfil",
+    "madurez",
+    "impacto_mensual",
+    "impacto_anual",
+    "madurez_cyber",
+    "riesgo_cyber",
+    "dias_recuperacion_cyber",
+    "impacto_cyber_mensual",
+    "impacto_cyber_anual",
+  ].join(",");
+  const rows = surveys.map((item) =>
+    [
+      quoteCsvValue(item.createdAt),
+      quoteCsvValue(item.rubro),
+      quoteCsvValue(item.rubroOtro ?? ""),
+      quoteCsvValue(item.empleados),
+      quoteCsvValue(item.facturacion),
+      quoteCsvValue(`${item.perfil} - ${item.perfilTitulo}`),
+      item.maturityScore,
+      item.totalImpactMonthly,
+      item.totalImpactAnnual,
+      item.cyberMaturityScore,
+      quoteCsvValue(item.cyberRiskLevel),
+      item.cyberRecoveryDays,
+      item.cyberImpactMonthly,
+      item.cyberImpactAnnual,
+    ].join(","),
+  );
+
   return [header, ...rows].join("\n");
 }
 

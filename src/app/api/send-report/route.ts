@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordDiagnosticSurvey } from "@/lib/eventsDataStore";
 import { getDiagnosticoPdfBase64 } from "@/lib/generarPDF";
 import { DiagnosticResult, DiagnosticoState } from "@/lib/types";
 
@@ -9,6 +10,8 @@ export async function POST(request: Request) {
     state: DiagnosticoState;
     result: DiagnosticResult;
   };
+
+  await recordDiagnosticSurvey(state, result);
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
