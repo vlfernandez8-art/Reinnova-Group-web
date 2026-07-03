@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function AdminLoginPage() {
   return (
@@ -14,7 +14,6 @@ export default function AdminLoginPage() {
 }
 
 function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("next") ?? "/soy-reinnova/admin/eventos";
   const [email, setEmail] = useState("cmontesino@reinnova.com.ar");
@@ -38,8 +37,7 @@ function AdminLoginForm() {
       return;
     }
 
-    setLoading(false);
-    router.push(redirectTo);
+    window.location.href = redirectTo;
   };
 
   return (
