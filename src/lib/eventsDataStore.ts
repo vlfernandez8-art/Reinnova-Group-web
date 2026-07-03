@@ -551,14 +551,14 @@ export async function getDiagnosticSurveys(filters?: { from?: string | null; to?
   const db = await readDb();
   const from = filters?.from ? new Date(`${filters.from}T00:00:00`).getTime() : null;
   const to = filters?.to ? new Date(`${filters.to}T23:59:59`).getTime() : null;
-  const rubro = filters?.rubro?.trim();
+  const rubro = filters?.rubro?.trim().toLowerCase();
 
   return db.diagnosticSurveys
     .filter((item) => {
       const created = new Date(item.createdAt).getTime();
       if (from && created < from) return false;
       if (to && created > to) return false;
-      if (rubro && rubro !== "todos" && item.rubro !== rubro) return false;
+      if (rubro && rubro !== "todos" && item.rubro.toLowerCase() !== rubro) return false;
       return true;
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

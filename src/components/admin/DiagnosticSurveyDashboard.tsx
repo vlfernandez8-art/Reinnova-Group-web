@@ -3,6 +3,7 @@
 import { Download, Filter, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type DiagnosticSurveyRecord } from "@/lib/eventsTypes";
+import { rubros } from "@/lib/preguntas";
 
 const currency = new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -20,7 +21,6 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
   const [surveys, setSurveys] = useState(initialSurveys);
   const [filters, setFilters] = useState<Filters>({ from: "", to: "", rubro: "todos" });
   const [loading, setLoading] = useState(false);
-  const rubros = useMemo(() => Array.from(new Set(initialSurveys.map((item) => item.rubro))).sort(), [initialSurveys]);
   const summary = useMemo(() => buildSummary(surveys), [surveys]);
   const trends = useMemo(() => buildMonthlyTrend(surveys), [surveys]);
   const rubroDistribution = useMemo(() => buildDistribution(surveys, "rubro"), [surveys]);
@@ -29,7 +29,7 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
   const query = new URLSearchParams();
   if (filters.from) query.set("from", filters.from);
   if (filters.to) query.set("to", filters.to);
-  if (filters.rubro !== "todos") query.set("rubro", filters.rubro);
+  if (filters.rubro && filters.rubro !== "todos") query.set("rubro", filters.rubro);
 
   const applyFilters = async () => {
     setLoading(true);
@@ -68,8 +68,8 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
           <select className="input" value={filters.rubro} onChange={(event) => setFilters({ ...filters, rubro: event.target.value })}>
             <option value="todos">Todos los rubros</option>
             {rubros.map((rubro) => (
-              <option key={rubro} value={rubro}>
-                {rubro}
+              <option key={rubro.id} value={rubro.id}>
+                {rubro.label}
               </option>
             ))}
           </select>
@@ -134,7 +134,7 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
                 surveys.map((item) => (
                   <tr key={item.id}>
                     <td className="px-4 py-3">{new Date(item.createdAt).toLocaleDateString("es-AR")}</td>
-                    <td className="px-4 py-3">{item.rubroOtro || item.rubro}</td>
+                    <td className="px-4 py-3">{item.rubroOtro || getRubroLabel(item.rubro)}</td>
                     <td className="px-4 py-3">{item.perfil}</td>
                     <td className="px-4 py-3">{currency.format(item.totalImpactMonthly)}</td>
                     <td className="px-4 py-3">{item.maturityScore}%</td>
@@ -225,6 +225,10 @@ function Distribution({ title, items }: { title: string; items: { label: string;
   );
 }
 
+function getRubroLabel(rubroId: string) {
+  return rubros.find((rubro) => rubro.id === rubroId)?.label ?? rubroId;
+}
+
 function buildSummary(items: DiagnosticSurveyRecord[]) {
   const count = items.length;
   const avg = (selector: (item: DiagnosticSurveyRecord) => number) => {
@@ -266,7 +270,7 @@ function buildMonthlyTrend(items: DiagnosticSurveyRecord[]) {
 function buildDistribution(items: DiagnosticSurveyRecord[], key: "rubro" | "cyberRiskLevel") {
   const map = new Map<string, number>();
   items.forEach((item) => {
-    const label = item[key] || "No informado";
+    const label = key === "rubro" ? getRubroLabel(item.rubro) : item[key] || "No informado";
     map.set(label, (map.get(label) ?? 0) + 1);
   });
 
