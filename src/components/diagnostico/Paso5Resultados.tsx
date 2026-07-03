@@ -38,11 +38,10 @@ export function Paso5Resultados({
   const diagnosticWhatsapp = generateWhatsappUrl(state, "diagnostico");
   const servicesWhatsapp = generateWhatsappUrl(state, "servicios");
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const sentKey = useRef(`${state.company.email}-${state.company.empresa}-${result.score}`);
+  const reportRequested = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    const localKey = `reinnova-report-sent-${sentKey.current}`;
 
     async function sendReport() {
       setEmailStatus("sending");
@@ -54,10 +53,6 @@ export function Paso5Resultados({
         });
         const payload = (await response.json()) as { sent?: boolean; skipped?: boolean };
 
-        if (payload.sent) {
-          window.localStorage.setItem(localKey, "1");
-        }
-
         if (!cancelled) {
           setEmailStatus(payload.sent || payload.skipped ? "sent" : "error");
         }
@@ -66,9 +61,9 @@ export function Paso5Resultados({
       }
     }
 
-    if (!window.localStorage.getItem(localKey)) {
-      sendReport();
-    }
+    if (reportRequested.current) return;
+    reportRequested.current = true;
+    sendReport();
 
     return () => {
       cancelled = true;
