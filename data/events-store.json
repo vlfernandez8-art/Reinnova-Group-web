@@ -11,8 +11,9 @@
     {
       "id": "423f46aa-66a0-463c-976a-a99bac14d7c9",
       "email": "vfernandez@reinnova.com.ar",
-      "passwordHash": "21f0b325e7d7afaa1b6dfb6f4aa9bf02:8b05d2ef277e81e8075f3f4135736678973178f2df4c1f2f599e99b8ff3eab4207c18f3ab76f9baa9ae9471a54aedb3221a17e1d54003d079b69334c0bfdf35d",
-      "createdAt": "2026-06-17T21:17:20.415Z"
+      "passwordHash": "14ae2d71bb04b06f5d839de01c27600c:08ba2450465fc1c45c57989dbff7c5821daca47b9e12083ee1ce9d472fe4da9d4e240ef3a34c2f012828d36d7f6233584d503acc5406cde6668e95bcce06b35e",
+      "createdAt": "2026-06-17T21:17:20.415Z",
+      "updatedAt": "2026-07-03T01:20:02.350Z"
     }
   ],
   "sessions": [
