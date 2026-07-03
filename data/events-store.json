@@ -5,15 +5,16 @@
     {
       "id": "856b6967-0c9b-44d1-8769-1f364d200ce5",
       "email": "cmontesino@reinnova.com.ar",
-      "passwordHash": "8a658aea9e6d81ca93b8faffdbb0a394:031f080cef94daf0f18d17c9da8d7fba332a575939f5a72df923c9350eb7a0c2e6f5768bfdee652d4af4b45be5cafba38d2dac567edf449aa8a162b831f9ca9c",
-      "createdAt": "2026-06-17T21:17:20.374Z"
+      "passwordHash": "89301adca4c046159b7531c2e9a85a08:c442b3342832f54649514482182eb804d0321b62f342a68f12fdd3f5fe04b68da76a8a612acb2ce7bae38b3b9cc479f503bef296e9760dbd2b7fc4ca77a50c65",
+      "createdAt": "2026-06-17T21:17:20.374Z",
+      "updatedAt": "2026-07-03T12:25:32.218Z"
     },
     {
       "id": "423f46aa-66a0-463c-976a-a99bac14d7c9",
       "email": "vfernandez@reinnova.com.ar",
-      "passwordHash": "14ae2d71bb04b06f5d839de01c27600c:08ba2450465fc1c45c57989dbff7c5821daca47b9e12083ee1ce9d472fe4da9d4e240ef3a34c2f012828d36d7f6233584d503acc5406cde6668e95bcce06b35e",
+      "passwordHash": "9e2fb44e4d75e13fb112d66c08f98918:1f18246a9e8572ff7f8165e4d303579f55c681896a10a72196af94428a60a8374c9be5f725a7f511616752029181dc2e69b5ee6a7745c7f7c85c3c4b98b8ac7e",
       "createdAt": "2026-06-17T21:17:20.415Z",
-      "updatedAt": "2026-07-03T01:20:02.350Z"
+      "updatedAt": "2026-07-03T12:25:32.218Z"
     }
   ],
   "sessions": [
