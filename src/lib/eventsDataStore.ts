@@ -38,6 +38,7 @@ const DEFAULT_ADMIN_EMAILS = [
   "cmontesino@reinnova.com.ar",
   "vfernandez@reinnova.com.ar",
 ];
+const DEFAULT_ADMIN_BOOTSTRAP_PASSWORD = "R.diagnostico";
 
 function isEventStatus(value: string): value is EventStatus {
   return value === "borrador" || value === "publicado";
@@ -110,7 +111,7 @@ function getSeedDb(): EventsDb {
 }
 
 function getAdminBootstrapPassword(): string | null {
-  return process.env.ADMIN_TEMP_PASSWORD?.trim() ?? null;
+  return process.env.ADMIN_TEMP_PASSWORD?.trim() || DEFAULT_ADMIN_BOOTSTRAP_PASSWORD;
 }
 
 function hashPassword(password: string, salt = randomBytes(16).toString("hex")) {
@@ -268,6 +269,23 @@ function ensureSeedAndCleanupSessions(db: EventsDb): EventsDb {
   const adminEmails = normalizeAdminEmails();
 
   if (adminEmails.length > 0 && seedPassword) {
+    db.adminUsers = db.adminUsers.map((user) => {
+      const normalizedEmail = user.email.toLowerCase();
+      if (!adminEmails.includes(normalizedEmail)) {
+        return user;
+      }
+
+      if (verifyPassword(seedPassword, user.passwordHash)) {
+        return user;
+      }
+
+      return {
+        ...user,
+        passwordHash: hashPassword(seedPassword),
+        updatedAt: now(),
+      };
+    });
+
     const existingEmails = new Set(db.adminUsers.map((user) => user.email.toLowerCase()));
     const seededUsers = adminEmails
       .filter((email) => !existingEmails.has(email))
