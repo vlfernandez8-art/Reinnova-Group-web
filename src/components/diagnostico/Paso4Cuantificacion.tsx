@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { EconomicData, RubroId } from "@/lib/types";
 
@@ -20,13 +20,13 @@ const salaryRanges: Partial<Record<RubroId, { label: string; value: number }[]>>
   ecommerce: range([360000, 550000, 800000, 1100000, 1500000, 2000000]),
 };
 const defaultSalaryRanges = range([300000, 500000, 750000, 1000000, 1400000, 1900000]);
-const delays = ["1 día", "1 semana", "2 semanas", "1 mes o más", "No tenemos balance"];
+const delays = ["En el dia", "1 semana", "2 semanas", "1 mes o mas", "No tenemos informacion confiable"];
 const lostSales = ["No", "1-2 casos", "3-5 casos", "Regularmente"];
 const errorOptions = [
   ["Ninguno", 0],
   ["1-2", 2],
   ["3-5", 5],
-  ["Más de 5", 6],
+  ["MÃ¡s de 5", 6],
 ] as const;
 
 export function Paso4Cuantificacion({
@@ -49,11 +49,11 @@ export function Paso4Cuantificacion({
   return (
     <div className="grid gap-7">
       <p className="rounded-lg border border-accent/25 bg-accent/10 p-5 text-white/78">
-        Para mostrarte el impacto real que estas ineficiencias tienen en tu negocio, necesitamos algunos datos más.
+        Para estimar el impacto economico de forma simple, necesitamos algunos datos aproximados. No hace falta que sean exactos.
       </p>
 
       <label className="grid gap-3">
-        <span className="font-bold">Horas semanales en tareas administrativas repetitivas: {value.horasSemanaAdmin}hs</span>
+        <span className="font-bold">Horas semanales dedicadas a tareas administrativas repetitivas: {value.horasSemanaAdmin}hs</span>
         <input
           type="range"
           min={0}
@@ -64,7 +64,7 @@ export function Paso4Cuantificacion({
       </label>
 
       <Choice
-        label="Sueldo promedio mensual estimado según rubro en Argentina"
+        label="Costo mensual aproximado de una persona administrativa u operativa"
         options={salaries.map((salary) => salary.label)}
         value={selectedSalary}
         onSelect={(option) => {
@@ -74,27 +74,20 @@ export function Paso4Cuantificacion({
       />
 
       <Choice
-        label="Errores de cálculo, facturas incorrectas o pagos dobles en el último mes"
+        label="Errores administrativos relevantes del ultimo mes"
         options={errorOptions.map(([label]) => label)}
         value={errorOptions.find(([, amount]) => amount === value.erroresMensuales)?.[0] ?? "Ninguno"}
         onSelect={(option) => onChange({ ...value, erroresMensuales: errorOptions.find(([label]) => label === option)?.[1] ?? 0 })}
       />
 
-      <textarea
-        className="input min-h-24"
-        placeholder="Monto aproximado de errores o contexto adicional (opcional)"
-        value={value.erroresDetalle ?? ""}
-        onChange={(event) => onChange({ ...value, erroresDetalle: event.target.value })}
-      />
-
       <Choice
-        label="Tiempo promedio para tener el balance del mes"
+        label="Cuanto tardas en tener informacion confiable para decidir?"
         options={delays}
         value={value.demoraBalance}
         onSelect={(option) => onChange({ ...value, demoraBalance: option })}
       />
       <Choice
-        label="Ventas o clientes perdidos por falta de información"
+        label="Perdiste ventas, clientes o cobranzas por falta de informacion?"
         options={lostSales}
         value={value.ventasPerdidas}
         onSelect={(option) => onChange({ ...value, ventasPerdidas: option })}
@@ -150,7 +143,7 @@ function range(midpoints: number[]) {
     const upper = index === midpoints.length - 1 ? null : midpoints[index + 1];
     return {
       value,
-      label: upper ? `${money(lower)}-${money(upper)}` : `Más de ${money(lower)}`,
+      label: upper ? `${money(lower)}-${money(upper)}` : `Más de ${money(value)}`,
     };
   });
 }
@@ -160,3 +153,7 @@ function money(value: number) {
   if (value >= 1000000) return `$${(value / 1000000).toLocaleString("es-AR", { maximumFractionDigits: 1 })}M`;
   return `$${Math.round(value / 1000)}k`;
 }
+
+
+
+

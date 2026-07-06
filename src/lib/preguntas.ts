@@ -26,75 +26,46 @@ export const baseQuestions: DiagnosticQuestion[] = [
   {
     id: "fin_caja",
     block: "Control financiero",
-    text: "¿Sabés en este momento exactamente cuánto dinero tenés disponible en caja + banco?",
+    text: "Sabes en este momento cuanto dinero tenes disponible entre caja y banco?",
     kind: "single",
-    options: options(["Sí, al instante", "Con 1-2 días de demora", "Solo aproximado", "No tengo idea"]),
-  },
-  {
-    id: "fin_rentabilidad",
-    block: "Control financiero",
-    text: "¿Cuánto tiempo tardás en saber si el mes fue rentable o no?",
-    kind: "single",
-    options: options(["El mismo día que cierra", "1 semana", "15 días o más", "Nunca lo sé con precisión"]),
+    options: options(["Si, al instante", "Con 1-2 dias de demora", "Solo aproximado", "No tengo idea"]),
   },
   {
     id: "fin_personales",
     block: "Control financiero",
-    text: "¿Las finanzas del negocio están separadas de las personales?",
+    text: "Las finanzas del negocio estan separadas de las personales?",
     kind: "single",
-    options: options(["Completamente separadas", "Mayormente separadas", "Se mezclan bastante", "Están mezcladas"]),
+    options: options(["Completamente separadas", "Mayormente separadas", "Se mezclan bastante", "Estan mezcladas"]),
   },
   {
-    id: "ops_persona_clave",
+    id: "fin_margen",
+    block: "Control financiero",
+    text: "Sabes que productos, servicios o trabajos te dejan mayor margen?",
+    kind: "single",
+    options: options(["Si, con datos", "Tengo una idea general", "Lo reviso poco", "No lo se"]),
+  },
+  {
+    id: "ops_continuidad",
     block: "Operaciones y procesos",
-    text: "Si faltara una persona clave en tu empresa hoy, ¿el proceso se frena?",
+    text: "Si vos o una persona clave no esta disponible por varios dias, el negocio puede seguir funcionando?",
     kind: "single",
-    options: options(["Para nada, todo documentado", "Algo se frena", "Se frena bastante", "Todo para"]),
+    options: options(["Sin problemas", "Con pequenos ajustes", "Con problemas importantes", "Se frena casi todo"]),
   },
   {
-    id: "ops_dato_repetido",
+    id: "ops_info_unica",
     block: "Operaciones y procesos",
-    text: "¿Cuántas veces se carga el mismo dato en diferentes lugares?",
+    text: "La informacion se carga una sola vez y todos trabajan con el mismo dato?",
     kind: "single",
-    options: options(["Una sola vez", "2 veces", "3 o más veces", "No lo sé"]),
+    options: options(["Si, todo integrado", "Mayormente", "Hay datos repetidos", "Cada uno maneja su version"]),
   },
   {
-    id: "ops_rentables",
-    block: "Operaciones y procesos",
-    text: "¿Tenés registrado cuáles son tus productos/servicios más rentables?",
+    id: "tec_gestion",
+    block: "Tecnologia y datos",
+    text: "Usas algun sistema, planilla ordenada o metodo unico para gestionar ventas, pagos, stock/clientes y reportes?",
     kind: "single",
-    options: options(["Sí, con datos", "Tengo intuición", "No lo sé", "Nunca lo analicé"]),
-  },
-  {
-    id: "tec_software",
-    block: "Tecnología y datos",
-    text: "¿Usás algún software de gestión (ERP, CRM, facturador)?",
-    kind: "single",
-    options: options(["Sí, integrado y actualizado", "Sí pero incompleto", "Solo Excel/papel", "No uso nada"]),
-  },
-  {
-    id: "tec_versiones",
-    block: "Tecnología y datos",
-    text: "¿Tus equipos trabajan con la misma información o cada uno tiene su versión?",
-    kind: "single",
-    options: options(["Todos con la misma", "Mayormente igual", "Cada uno maneja lo suyo", "Hay versiones contradictorias"]),
-  },
-  {
-    id: "lider_horas",
-    block: "Tiempo del dueño / liderazgo",
-    text: "¿Cuántas horas por semana dedicás a tareas operativas o administrativas?",
-    kind: "single",
-    options: options(["Menos de 5hs", "5-15hs", "15-30hs", "Más de 30hs"]),
-  },
-  {
-    id: "lider_descanso",
-    block: "Tiempo del dueño / liderazgo",
-    text: "Si te tomaras 15 días de descanso sin celular, ¿tu negocio seguiría operando?",
-    kind: "single",
-    options: options(["Sin problemas", "Con pequeños inconvenientes", "Habría problemas serios", "Se caería todo"]),
+    options: options(["Si, integrado", "Si, pero incompleto", "Planillas/WhatsApp", "No hay metodo claro"]),
   },
 ];
-
 export const industryQuestions: Partial<Record<RubroId, DiagnosticQuestion[]>> = {
   retail: [
     ["ret_stock", "¿Tu stock está actualizado en tiempo real o lo controlás periódicamente?", ["Tiempo real", "Cada semana", "Cada mes", "Nunca lo controlo"]],
@@ -204,6 +175,15 @@ const cyberRegulatoryRequirement: Partial<Record<RubroId, string>> = {
   otro: "A definir",
 };
 
+const rubrosConNormativaCyber = new Set<RubroId>([
+  "salud",
+  "educacion",
+  "servicios-profesionales",
+  "tecnologia",
+  "ecommerce",
+  "importacion-exportacion",
+  "logistica",
+]);
 const cyberComplianceQuestion = (rubro: RubroId): DiagnosticQuestion | null => {
   const requirement = cyberRegulatoryRequirement[rubro];
   if (!requirement || requirement === "A definir") {
@@ -282,7 +262,7 @@ function toQuestion(block: string) {
 }
 
 export function getQuestionsForRubro(rubro: RubroId | "") {
-  const normativa = rubro ? cyberComplianceQuestion(rubro) : null;
+  const normativa = rubro && rubrosConNormativaCyber.has(rubro) ? cyberComplianceQuestion(rubro) : null;
 
   return [
     ...baseQuestions,
@@ -292,3 +272,4 @@ export function getQuestionsForRubro(rubro: RubroId | "") {
     ...(normativa ? [normativa] : []),
   ];
 }
+

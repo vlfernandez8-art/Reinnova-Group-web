@@ -41,10 +41,14 @@ export function currency(value: number) {
 
 function balanceDelayFactor(delay: string) {
   const factors: Record<string, number> = {
+    "En el dia": 0.005,
+    "1 dia": 0.005,
     "1 día": 0.005,
     "1 semana": 0.015,
     "2 semanas": 0.025,
+    "1 mes o mas": 0.04,
     "1 mes o más": 0.04,
+    "No tenemos informacion confiable": 0.055,
     "No tenemos balance": 0.055,
   };
 
@@ -68,3 +72,4 @@ function errorRevenueFactor(errors: number) {
   if (errors <= 5) return 0.008;
   return 0.015;
 }
+
