@@ -33,6 +33,7 @@ const FALLBACK_DB_DIR = path.join(process.cwd(), "tmp");
 const FALLBACK_DB_FILE = path.join(tmpdir(), "reinnova-events-store.json");
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 24;
 const ENV_DB_PATH = process.env.EVENTS_DB_PATH?.trim();
+const REMOTE_DB_KEY = process.env.EVENTS_REMOTE_DB_KEY?.trim() || "reinnova:events-store";
 
 const DEFAULT_ADMIN_EMAILS = [
   "cmontesino@reinnova.com.ar",
@@ -63,6 +64,44 @@ function normalizeAdminEmails(): string[] {
 }
 
 let cachedDbPath: string | null = null;
+
+type RemoteDbConfig = {
+  url: string;
+  token: string;
+};
+
+function getRemoteDbConfig(): RemoteDbConfig | null {
+  const url = (process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL)?.trim();
+  const token = (process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN)?.trim();
+
+  if (!url || !token) {
+    return null;
+  }
+
+  return {
+    url: url.replace(/\/+$/, ""),
+    token,
+  };
+}
+
+async function upstashCommand<T>(config: RemoteDbConfig, command: unknown[]): Promise<T> {
+  const response = await fetch(config.url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command),
+    cache: "no-store",
+  });
+
+  const payload = (await response.json()) as { result?: T; error?: string };
+  if (!response.ok || payload.error) {
+    throw new Error(payload.error || `upstash_http_${response.status}`);
+  }
+
+  return payload.result as T;
+}
 
 async function resolveDbPath(): Promise<string> {
   if (cachedDbPath) {
@@ -199,6 +238,23 @@ function validateRegistrationPayload(payload: Partial<RegistrationPayload>) {
 }
 
 async function readDb(): Promise<EventsDb> {
+  const remoteConfig = getRemoteDbConfig();
+  if (remoteConfig) {
+    const raw = await upstashCommand<string | null>(remoteConfig, ["GET", REMOTE_DB_KEY]);
+    if (!raw) {
+      return writeDb(getSeedDb());
+    }
+
+    const parsed = JSON.parse(raw) as EventsDb;
+    return ensureSeedAndCleanupSessions({
+      events: parsed.events ?? [],
+      registrations: parsed.registrations ?? [],
+      adminUsers: parsed.adminUsers ?? [],
+      sessions: parsed.sessions ?? [],
+      diagnosticSurveys: parsed.diagnosticSurveys ?? [],
+    });
+  }
+
   const dbPath = await resolveDbPath();
   await mkdir(path.dirname(dbPath), { recursive: true });
 
@@ -219,8 +275,6 @@ async function readDb(): Promise<EventsDb> {
 }
 
 async function writeDb(db: EventsDb): Promise<EventsDb> {
-  const dbPath = await resolveDbPath();
-  await mkdir(path.dirname(dbPath), { recursive: true });
   const normalized = ensureSeedAndCleanupSessions({
     ...db,
     events: db.events.map((item) => ({
@@ -262,6 +316,15 @@ async function writeDb(db: EventsDb): Promise<EventsDb> {
       cyberRiskLevel: item.cyberRiskLevel.trim(),
     })),
   });
+
+  const remoteConfig = getRemoteDbConfig();
+  if (remoteConfig) {
+    await upstashCommand<string>(remoteConfig, ["SET", REMOTE_DB_KEY, JSON.stringify(normalized)]);
+    return normalized;
+  }
+
+  const dbPath = await resolveDbPath();
+  await mkdir(path.dirname(dbPath), { recursive: true });
 
   await writeFile(dbPath, JSON.stringify(normalized, null, 2), "utf8");
   return normalized;
