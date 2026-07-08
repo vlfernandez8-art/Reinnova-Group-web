@@ -381,17 +381,20 @@ function getSessionTtlSeconds() {
 function ensureSeedAndCleanupSessions(db: EventsDb): EventsDb {
   const nowDate = new Date();
   const activeSessions = db.sessions.filter((session) => new Date(session.expiresAt).getTime() > nowDate.getTime());
-  const seedPassword = getAdminBootstrapPassword();
   const adminEmails = normalizeAdminEmails();
 
-  if (adminEmails.length > 0 && seedPassword) {
+  if (adminEmails.length > 0) {
     db.adminUsers = db.adminUsers.map((user) => {
       const normalizedEmail = user.email.toLowerCase();
       if (!adminEmails.includes(normalizedEmail)) {
         return user;
       }
 
-      const passwordForUser = getAdminPasswordForEmail(normalizedEmail) || seedPassword;
+      const passwordForUser = getAdminPasswordForEmail(normalizedEmail);
+      if (!passwordForUser) {
+        return user;
+      }
+
       if (verifyPassword(passwordForUser, user.passwordHash)) {
         return user;
       }
@@ -406,10 +409,11 @@ function ensureSeedAndCleanupSessions(db: EventsDb): EventsDb {
     const existingEmails = new Set(db.adminUsers.map((user) => user.email.toLowerCase()));
     const seededUsers = adminEmails
       .filter((email) => !existingEmails.has(email))
+      .filter((email) => Boolean(getAdminPasswordForEmail(email)))
       .map((email) => ({
         id: createId(),
         email,
-        passwordHash: hashPassword(getAdminPasswordForEmail(email) || seedPassword),
+        passwordHash: hashPassword(getAdminPasswordForEmail(email)!),
         createdAt: now(),
       }));
 
