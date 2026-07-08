@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addRegistration, getEventById } from "@/lib/eventsDataStore";
 import { sendRegistrationConfirmationEmail } from "@/lib/eventMailer";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/security";
 
 export async function POST(request: NextRequest, context: { params: { id: string } }) {
   try {
+    const ip = getClientIp(request);
+    const limit = checkRateLimit(`event-register:${ip}:${context.params.id}`, 10, 60 * 60 * 1000);
+    if (!limit.ok) {
+      return rateLimitResponse(limit.retryAfter);
+    }
+
     const body = (await request.json()) as {
       fullName?: string;
       company?: string;
@@ -30,9 +37,7 @@ export async function POST(request: NextRequest, context: { params: { id: string
 
     return NextResponse.json({ ok: true, message: "registered" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "registration_failed", message: String(error) },
-      { status: 400 },
-    );
+    console.error("event_registration_error", error);
+    return NextResponse.json({ error: "registration_failed" }, { status: 400 });
   }
 }

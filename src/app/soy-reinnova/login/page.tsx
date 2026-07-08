@@ -16,8 +16,8 @@ export default function AdminLoginPage() {
 function AdminLoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("next") ?? "/soy-reinnova/admin/eventos";
-  const [email, setEmail] = useState("cmontesino@reinnova.com.ar");
-  const [password, setPassword] = useState("demo");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 

@@ -7,7 +7,12 @@ export const ADMIN_SESSION_COOKIE = "reinnova-admin-session";
 const SESSION_VERSION = "v2";
 
 function getSessionSecret() {
-  return process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD_PEPPER || "reinnova-admin-session";
+  const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD_PEPPER;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("ADMIN_SESSION_SECRET_REQUIRED");
+  }
+
+  return secret || "local-dev-admin-session-secret";
 }
 
 function sign(value: string) {

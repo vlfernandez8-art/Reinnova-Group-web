@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { type EventRecord, type RegistrationRecord } from "@/lib/eventsTypes";
+import { escapeHtml } from "@/lib/security";
 
 const mailSchema = z.object({
   to: z.string().email(),
@@ -33,8 +34,8 @@ async function sendResendEmail(payload: { to: string; subject: string; html: str
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    return { ok: false, message: error };
+    console.error("event_mailer_error", await response.text());
+    return { ok: false, message: "email_send_failed" };
   }
 
   return { ok: true };
@@ -45,16 +46,16 @@ export async function sendRegistrationConfirmationEmail(
   registration: RegistrationRecord,
 ) {
   const html = `
-    <h2>Confirmacion de inscripcion - ${event.title}</h2>
-    <p>Hola ${registration.fullName},</p>
-    <p>Gracias por inscribirte a la capacitacion <strong>${event.title}</strong> de Reinnova Group.</p>
-    <p><strong>Fecha:</strong> ${event.date}</p>
-    <p><strong>Hora:</strong> ${event.time}</p>
-    <p><strong>Modalidad:</strong> ${event.modality}</p>
-    <p><strong>Duracion:</strong> ${event.duration}</p>
+    <h2>Confirmacion de inscripcion - ${escapeHtml(event.title)}</h2>
+    <p>Hola ${escapeHtml(registration.fullName)},</p>
+    <p>Gracias por inscribirte a la capacitacion <strong>${escapeHtml(event.title)}</strong> de Reinnova Group.</p>
+    <p><strong>Fecha:</strong> ${escapeHtml(event.date)}</p>
+    <p><strong>Hora:</strong> ${escapeHtml(event.time)}</p>
+    <p><strong>Modalidad:</strong> ${escapeHtml(event.modality)}</p>
+    <p><strong>Duracion:</strong> ${escapeHtml(event.duration)}</p>
     <p>
       <strong>Link de acceso:</strong>
-      <a href="${event.accessLink}">${event.accessLink}</a>
+      <a href="${escapeHtml(event.accessLink)}">${escapeHtml(event.accessLink)}</a>
     </p>
     <p>Te recomendamos ingresar unos minutos antes.</p>
     <p>Saludos,<br/>Equipo Reinnova Group</p>
