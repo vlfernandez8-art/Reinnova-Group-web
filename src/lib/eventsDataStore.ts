@@ -553,6 +553,7 @@ export async function getRegistrations(eventId: string): Promise<RegistrationRec
 
 export async function getAdminByEmail(email: string): Promise<AdminUserRecord | null> {
   const db = await readDb();
+  await writeDb(db);
   return db.adminUsers.find((admin) => admin.email.toLowerCase() === email.trim().toLowerCase()) ?? null;
 }
 

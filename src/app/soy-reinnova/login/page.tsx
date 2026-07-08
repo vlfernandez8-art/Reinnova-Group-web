@@ -21,23 +21,40 @@ function AdminLoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const submit = async () => {
-    setLoading(true);
-    setError("");
-
-    const response = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password: password.trim() }),
-    });
-
-    if (!response.ok) {
-      setLoading(false);
-      setError("No pudimos validar tus credenciales.");
+  const submit = async (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError("Completa mail y contrasena para ingresar.");
       return;
     }
 
-    window.location.href = redirectTo;
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      });
+
+      if (response.status === 429) {
+        setLoading(false);
+        setError("Demasiados intentos. Espera unos minutos y volve a probar.");
+        return;
+      }
+
+      if (!response.ok) {
+        setLoading(false);
+        setError("No pudimos validar tus credenciales.");
+        return;
+      }
+
+      window.location.href = redirectTo;
+    } catch {
+      setLoading(false);
+      setError("No pudimos conectar con el servidor. Volve a intentar en unos segundos.");
+    }
   };
 
   return (
@@ -45,7 +62,7 @@ function AdminLoginForm() {
       <section className="section-shell grid max-w-2xl gap-6 py-12">
         <h1 className="font-heading text-4xl font-bold">Acceso interno Reinnova</h1>
         <p className="text-white/72">Ingresa con tu usuario administrador para gestionar eventos y capacitaciones.</p>
-        <div className="glow-card rounded border border-white/12 bg-white/[0.03] p-6 md:p-8">
+        <form className="glow-card rounded border border-white/12 bg-white/[0.03] p-6 md:p-8" onSubmit={submit}>
           <div className="grid gap-3">
             <label className="grid gap-1 text-sm">
               <span>Mail</span>
@@ -57,8 +74,8 @@ function AdminLoginForm() {
             </label>
             {error ? <p className="rounded border border-danger/35 bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p> : null}
             <button
-              onClick={submit}
-              disabled={loading}
+              type="submit"
+              disabled={loading || !email.trim() || !password.trim()}
               className="mt-2 rounded bg-accent px-5 py-3 font-bold text-black disabled:opacity-60"
             >
               {loading ? "Ingresando..." : "Ingresar"}
@@ -69,7 +86,7 @@ function AdminLoginForm() {
               Volver al inicio
             </Link>
           </p>
-        </div>
+        </form>
       </section>
     </main>
   );
