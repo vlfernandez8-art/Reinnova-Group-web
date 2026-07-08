@@ -19,19 +19,20 @@ const body = DM_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.reinnovagroup.com.ar"),
-  title: "Reinnova Group | DiagnÃ³stico empresarial para PyMEs",
+  title: "Reinnova Group | Diagnóstico empresarial para PyMEs",
   description:
-    "DiagnÃ³stico, estrategia y automatizaciÃ³n para empresas que quieren ordenar procesos, detectar fugas y escalar con datos.",
+    "Diagnóstico, estrategia y automatización para empresas que quieren ordenar procesos, detectar fugas y escalar con datos.",
   icons: {
     icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/favicon.png", type: "image/png", sizes: "512x512" },
       { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
     ],
     apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
-  },  openGraph: {
+  },
+  openGraph: {
     title: "Reinnova Group",
-    description:
-      "DescubrÃ­ en 5 minutos cuÃ¡nto le estÃ¡ costando el desorden operativo a tu empresa.",
+    description: "Descubrí en 5 minutos cuánto le está costando el desorden operativo a tu empresa.",
     url: "https://www.reinnovagroup.com.ar",
     siteName: "Reinnova Group",
     images: ["/og-image.png"],
@@ -56,4 +57,3 @@ export default function RootLayout({
     </html>
   );
 }
-
