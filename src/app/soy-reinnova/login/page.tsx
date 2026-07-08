@@ -32,12 +32,15 @@ function AdminLoginForm() {
     setError("");
 
     try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 12000);
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
+        signal: controller.signal,
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
-      });
+      }).finally(() => window.clearTimeout(timeout));
 
       if (response.status === 429) {
         setLoading(false);
@@ -46,8 +49,9 @@ function AdminLoginForm() {
       }
 
       if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
         setLoading(false);
-        setError("No pudimos validar tus credenciales.");
+        setError(getLoginErrorMessage(payload?.error));
         return;
       }
 
@@ -65,7 +69,7 @@ function AdminLoginForm() {
       window.location.href = redirectTo;
     } catch {
       setLoading(false);
-      setError("No pudimos conectar con el servidor. Volve a intentar en unos segundos.");
+      setError("No pudimos conectar con el servidor o la respuesta demoro demasiado. Volve a intentar en unos segundos.");
     }
   };
 
@@ -113,4 +117,11 @@ function LoginShell() {
       </section>
     </main>
   );
+}
+
+function getLoginErrorMessage(error?: string) {
+  if (error === "invalid_request") return "No pudimos validar el origen de la solicitud. Actualiza la pagina y volve a intentar.";
+  if (error === "missing_credentials") return "Completa mail y contrasena para ingresar.";
+  if (error === "server_error") return "Hay un problema tecnico en el servidor. Revisemos las variables de Vercel.";
+  return "No pudimos validar tus credenciales.";
 }

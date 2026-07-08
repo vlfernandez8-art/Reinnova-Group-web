@@ -81,6 +81,8 @@ function getRemoteDbConfig(): RemoteDbConfig | null {
 }
 
 async function upstashCommand<T>(config: RemoteDbConfig, command: unknown[]): Promise<T> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
   const response = await fetch(config.url, {
     method: "POST",
     headers: {
@@ -89,7 +91,8 @@ async function upstashCommand<T>(config: RemoteDbConfig, command: unknown[]): Pr
     },
     body: JSON.stringify(command),
     cache: "no-store",
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
 
   const payload = (await response.json()) as { result?: T; error?: string };
   if (!response.ok || payload.error) {
