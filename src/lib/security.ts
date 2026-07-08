@@ -63,7 +63,15 @@ export function isValidSameOriginRequest(request: NextRequest) {
   }
 
   try {
-    return new URL(origin).host === host;
+    const originHost = new URL(origin).host;
+    const allowedHosts = new Set([
+      host,
+      request.headers.get("x-forwarded-host") || "",
+      process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL).host : "",
+      process.env.VERCEL_URL || "",
+    ].filter(Boolean));
+
+    return allowedHosts.has(originHost);
   } catch {
     return false;
   }

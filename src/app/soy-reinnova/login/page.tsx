@@ -35,6 +35,7 @@ function AdminLoginForm() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
@@ -47,6 +48,17 @@ function AdminLoginForm() {
       if (!response.ok) {
         setLoading(false);
         setError("No pudimos validar tus credenciales.");
+        return;
+      }
+
+      const sessionResponse = await fetch("/api/admin/session", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+
+      if (!sessionResponse.ok) {
+        setLoading(false);
+        setError("La clave fue validada, pero no se pudo abrir la sesion. Actualiza la pagina y volve a intentar.");
         return;
       }
 
