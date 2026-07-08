@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { DM_Sans, Space_Grotesk } from "next/font/google";
 import { CursorGlow } from "@/components/layout/CursorGlow";
 import { Footer } from "@/components/layout/Footer";
@@ -19,13 +19,19 @@ const body = DM_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.reinnovagroup.com.ar"),
-  title: "Reinnova Group | Diagnóstico empresarial para PyMEs",
+  title: "Reinnova Group | DiagnÃ³stico empresarial para PyMEs",
   description:
-    "Diagnóstico, estrategia y automatización para empresas que quieren ordenar procesos, detectar fugas y escalar con datos.",
-  openGraph: {
+    "DiagnÃ³stico, estrategia y automatizaciÃ³n para empresas que quieren ordenar procesos, detectar fugas y escalar con datos.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },  openGraph: {
     title: "Reinnova Group",
     description:
-      "Descubrí en 5 minutos cuánto le está costando el desorden operativo a tu empresa.",
+      "DescubrÃ­ en 5 minutos cuÃ¡nto le estÃ¡ costando el desorden operativo a tu empresa.",
     url: "https://www.reinnovagroup.com.ar",
     siteName: "Reinnova Group",
     images: ["/og-image.png"],
@@ -50,3 +56,4 @@ export default function RootLayout({
     </html>
   );
 }
+
