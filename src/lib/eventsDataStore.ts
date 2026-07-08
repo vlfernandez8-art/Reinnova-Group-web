@@ -34,6 +34,7 @@ const FALLBACK_DB_FILE = path.join(tmpdir(), "reinnova-events-store.json");
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 24;
 const ENV_DB_PATH = process.env.EVENTS_DB_PATH?.trim();
 const REMOTE_DB_KEY = process.env.EVENTS_REMOTE_DB_KEY?.trim() || "reinnova:events-store";
+const REMOTE_DIAGNOSTIC_SURVEYS_KEY = process.env.EVENTS_REMOTE_DIAGNOSTIC_SURVEYS_KEY?.trim() || "reinnova:diagnostic-surveys";
 
 const DEFAULT_ADMIN_EMAILS = [
   "cmontesino@reinnova.com.ar",
@@ -101,6 +102,53 @@ async function upstashCommand<T>(config: RemoteDbConfig, command: unknown[]): Pr
   }
 
   return payload.result as T;
+}
+
+function normalizeDiagnosticSurvey(item: DiagnosticSurveyRecord): DiagnosticSurveyRecord {
+  return {
+    ...item,
+    rubro: item.rubro.trim(),
+    rubroOtro: item.rubroOtro?.trim(),
+    empleados: item.empleados.trim(),
+    facturacion: item.facturacion.trim(),
+    perfil: item.perfil.trim(),
+    perfilTitulo: item.perfilTitulo.trim(),
+    cyberRiskLevel: item.cyberRiskLevel.trim(),
+  };
+}
+
+function dedupeDiagnosticSurveys(items: DiagnosticSurveyRecord[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) {
+      return false;
+    }
+
+    seen.add(item.id);
+    return true;
+  });
+}
+
+async function readRemoteDiagnosticSurveys(config: RemoteDbConfig): Promise<DiagnosticSurveyRecord[]> {
+  const [listItems, legacyRaw] = await Promise.all([
+    upstashCommand<string[]>(config, ["LRANGE", REMOTE_DIAGNOSTIC_SURVEYS_KEY, 0, -1]),
+    upstashCommand<string | null>(config, ["GET", REMOTE_DB_KEY]),
+  ]);
+  const listSurveys = (listItems ?? []).map((item) => JSON.parse(item) as DiagnosticSurveyRecord);
+  const legacyDb = legacyRaw ? (JSON.parse(legacyRaw) as Partial<EventsDb>) : null;
+  const legacySurveys = legacyDb?.diagnosticSurveys ?? [];
+  const listIds = new Set(listSurveys.map((item) => item.id));
+  const legacyMissingFromList = legacySurveys.filter((item) => !listIds.has(item.id));
+
+  if (legacyMissingFromList.length > 0) {
+    await Promise.all(legacyMissingFromList.map((item) => appendRemoteDiagnosticSurvey(config, item)));
+  }
+
+  return dedupeDiagnosticSurveys([...listSurveys, ...legacySurveys]).map(normalizeDiagnosticSurvey);
+}
+
+async function appendRemoteDiagnosticSurvey(config: RemoteDbConfig, survey: DiagnosticSurveyRecord) {
+  await upstashCommand<number>(config, ["LPUSH", REMOTE_DIAGNOSTIC_SURVEYS_KEY, JSON.stringify(normalizeDiagnosticSurvey(survey))]);
 }
 
 async function resolveDbPath(): Promise<string> {
@@ -585,7 +633,6 @@ export async function buildCsvForRegistrations(eventId: string) {
 }
 
 export async function recordDiagnosticSurvey(state: DiagnosticoState, result: DiagnosticResult): Promise<DiagnosticSurveyRecord> {
-  const db = await readDb();
   const survey: DiagnosticSurveyRecord = {
     id: createId(),
     createdAt: now(),
@@ -605,18 +652,26 @@ export async function recordDiagnosticSurvey(state: DiagnosticoState, result: Di
     cyberImpactAnnual: result.cyberRisk.annualImpact,
   };
 
+  const remoteConfig = getRemoteDbConfig();
+  if (remoteConfig) {
+    await appendRemoteDiagnosticSurvey(remoteConfig, survey);
+    return survey;
+  }
+
+  const db = await readDb();
   db.diagnosticSurveys.push(survey);
   await writeDb(db);
   return survey;
 }
 
 export async function getDiagnosticSurveys(filters?: { from?: string | null; to?: string | null; rubro?: string | null }) {
-  const db = await readDb();
+  const remoteConfig = getRemoteDbConfig();
+  const diagnosticSurveys = remoteConfig ? await readRemoteDiagnosticSurveys(remoteConfig) : (await readDb()).diagnosticSurveys;
   const from = filters?.from ? new Date(`${filters.from}T00:00:00`).getTime() : null;
   const to = filters?.to ? new Date(`${filters.to}T23:59:59`).getTime() : null;
   const rubro = filters?.rubro?.trim().toLowerCase();
 
-  return db.diagnosticSurveys
+  return diagnosticSurveys
     .filter((item) => {
       const created = new Date(item.createdAt).getTime();
       if (from && created < from) return false;
