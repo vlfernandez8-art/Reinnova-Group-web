@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Filter, RefreshCw, TrendingUp } from "lucide-react";
+import { Download, Filter, RefreshCw, TrendingUp, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type DiagnosticSurveyRecord } from "@/lib/eventsTypes";
 import { rubros } from "@/lib/preguntas";
@@ -21,6 +21,8 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
   const [surveys, setSurveys] = useState(initialSurveys);
   const [filters, setFilters] = useState<Filters>({ from: "", to: "", rubro: "todos" });
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
   const summary = useMemo(() => buildSummary(surveys), [surveys]);
   const trends = useMemo(() => buildMonthlyTrend(surveys), [surveys]);
   const rubroDistribution = useMemo(() => buildDistribution(surveys, "rubro"), [surveys]);
@@ -41,6 +43,29 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
     setLoading(false);
   };
 
+  const importBackup = async (file?: File) => {
+    if (!file) return;
+    setImporting(true);
+    setImportMessage("");
+    try {
+      const parsed = JSON.parse(await file.text()) as { diagnosticSurveys?: DiagnosticSurveyRecord[] };
+      if (!Array.isArray(parsed.diagnosticSurveys)) throw new Error("invalid_file");
+      const response = await fetch("/api/admin/diagnostics/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ diagnosticSurveys: parsed.diagnosticSurveys }),
+      });
+      if (!response.ok) throw new Error("import_failed");
+      const result = (await response.json()) as { imported: number; total: number };
+      setImportMessage(`${result.imported} diagnósticos importados. Total disponible: ${result.total}.`);
+      await applyFilters();
+    } catch {
+      setImportMessage("No se pudo importar el archivo. Seleccioná un respaldo válido de Reinnova.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <section className="section-shell py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -49,6 +74,17 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
           <h2 className="font-heading text-4xl font-bold">Relevamiento de diagnosticos</h2>
         </div>
         <div className="flex flex-wrap gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded border border-white/14 px-4 py-3 font-bold">
+            <Upload size={16} />
+            {importing ? "Importando..." : "Importar respaldo"}
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              disabled={importing}
+              onChange={(event) => importBackup(event.target.files?.[0])}
+            />
+          </label>
           <button
             type="button"
             onClick={applyFilters}
@@ -67,6 +103,8 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
           </a>
         </div>
       </div>
+
+      {importMessage ? <p className="mb-6 rounded border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-white/72">{importMessage}</p> : null}
 
       <div className="mb-6 grid gap-3 rounded border border-white/12 bg-white/[0.03] p-4 md:grid-cols-[1fr_1fr_1.3fr_auto]">
         <Field label="Desde">
