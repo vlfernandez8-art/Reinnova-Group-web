@@ -74,6 +74,11 @@ export type AdminSessionRecord = {
 export type DiagnosticSurveyRecord = {
   id: string;
   createdAt: string;
+  companyName?: string;
+  contactName?: string;
+  contactRole?: string;
+  contactEmail?: string;
+  contactWhatsapp?: string;
   rubro: string;
   rubroOtro?: string;
   empleados: string;

@@ -15,5 +15,8 @@ export async function GET(request: NextRequest) {
     rubro: searchParams.get("rubro"),
   });
 
-  return NextResponse.json({ surveys });
+  return NextResponse.json(
+    { surveys },
+    { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+  );
 }
