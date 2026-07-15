@@ -67,8 +67,11 @@ type RemoteDbConfig = {
 };
 
 function getRemoteDbConfig(): RemoteDbConfig | null {
-  const url = (process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL)?.trim();
-  const token = (process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN)?.trim();
+  const urlEntry = findRemoteEnvEntry(["KV_REST_API_URL", "UPSTASH_REDIS_REST_URL"]);
+  const token = urlEntry
+    ? process.env[`${urlEntry.prefix}${urlEntry.suffix.replace(/_URL$/, "_TOKEN")}`]?.trim()
+    : undefined;
+  const url = urlEntry?.value;
 
   if (!url || !token) {
     return null;
@@ -78,6 +81,23 @@ function getRemoteDbConfig(): RemoteDbConfig | null {
     url: url.replace(/\/+$/, ""),
     token,
   };
+}
+
+function findRemoteEnvEntry(suffixes: string[]) {
+  for (const suffix of suffixes) {
+    const exactValue = process.env[suffix]?.trim();
+    if (exactValue) return { suffix, prefix: "", value: exactValue };
+  }
+
+  for (const [key, rawValue] of Object.entries(process.env)) {
+    const suffix = suffixes.find((candidate) => key.endsWith(candidate));
+    const value = rawValue?.trim();
+    if (suffix && value) {
+      return { suffix, prefix: key.slice(0, -suffix.length), value };
+    }
+  }
+
+  return null;
 }
 
 async function upstashCommand<T>(config: RemoteDbConfig, command: unknown[]): Promise<T> {
@@ -699,6 +719,48 @@ export async function getDiagnosticSurveys(filters?: { from?: string | null; to?
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map(stripUndefined);
+}
+
+export async function importDiagnosticSurveys(items: DiagnosticSurveyRecord[]) {
+  const validItems = dedupeDiagnosticSurveys(items.filter(isImportableDiagnosticSurvey)).map(normalizeDiagnosticSurvey);
+  const remoteConfig = getRemoteDbConfig();
+
+  if (remoteConfig) {
+    const existing = await readRemoteDiagnosticSurveys(remoteConfig);
+    const existingIds = new Set(existing.map((item) => item.id));
+    const missing = validItems.filter((item) => !existingIds.has(item.id));
+    await Promise.all(missing.map((item) => appendRemoteDiagnosticSurvey(remoteConfig, item)));
+    return { imported: missing.length, total: existing.length + missing.length };
+  }
+
+  const db = await readDb();
+  const existingIds = new Set(db.diagnosticSurveys.map((item) => item.id));
+  const missing = validItems.filter((item) => !existingIds.has(item.id));
+  db.diagnosticSurveys.push(...missing);
+  await writeDb(db);
+  return { imported: missing.length, total: db.diagnosticSurveys.length };
+}
+
+function isImportableDiagnosticSurvey(item: DiagnosticSurveyRecord) {
+  return Boolean(
+    item &&
+      typeof item.id === "string" &&
+      typeof item.createdAt === "string" &&
+      !Number.isNaN(new Date(item.createdAt).getTime()) &&
+      typeof item.rubro === "string" &&
+      typeof item.empleados === "string" &&
+      typeof item.facturacion === "string" &&
+      typeof item.perfil === "string" &&
+      typeof item.perfilTitulo === "string" &&
+      typeof item.cyberRiskLevel === "string" &&
+      Number.isFinite(item.maturityScore) &&
+      Number.isFinite(item.totalImpactMonthly) &&
+      Number.isFinite(item.totalImpactAnnual) &&
+      Number.isFinite(item.cyberMaturityScore) &&
+      Number.isFinite(item.cyberRecoveryDays) &&
+      Number.isFinite(item.cyberImpactMonthly) &&
+      Number.isFinite(item.cyberImpactAnnual),
+  );
 }
 
 export async function buildCsvForDiagnosticSurveys(filters?: { from?: string | null; to?: string | null; rubro?: string | null }) {
