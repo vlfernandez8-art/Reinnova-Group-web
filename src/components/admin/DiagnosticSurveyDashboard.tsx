@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Filter, TrendingUp } from "lucide-react";
+import { Download, Filter, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type DiagnosticSurveyRecord } from "@/lib/eventsTypes";
 import { rubros } from "@/lib/preguntas";
@@ -33,7 +33,7 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
 
   const applyFilters = async () => {
     setLoading(true);
-    const response = await fetch(`/api/admin/diagnostics?${query.toString()}`);
+    const response = await fetch(`/api/admin/diagnostics?${query.toString()}`, { cache: "no-store" });
     if (response.ok) {
       const payload = (await response.json()) as { surveys: DiagnosticSurveyRecord[] };
       setSurveys(payload.surveys);
@@ -48,13 +48,24 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-accent">Soy Reinnova</p>
           <h2 className="font-heading text-4xl font-bold">Relevamiento de diagnosticos</h2>
         </div>
-        <a
-          href={`/api/admin/diagnostics/export?${query.toString()}`}
-          className="inline-flex items-center gap-2 rounded bg-accent px-4 py-3 font-bold text-black"
-        >
-          <Download size={16} />
-          Exportar en Excel
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={applyFilters}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded border border-white/14 px-4 py-3 font-bold disabled:opacity-60"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            Actualizar datos
+          </button>
+          <a
+            href={`/api/admin/diagnostics/export?${query.toString()}`}
+            className="inline-flex items-center gap-2 rounded bg-accent px-4 py-3 font-bold text-black"
+          >
+            <Download size={16} />
+            Exportar en Excel
+          </a>
+        </div>
       </div>
 
       <div className="mb-6 grid gap-3 rounded border border-white/12 bg-white/[0.03] p-4 md:grid-cols-[1fr_1fr_1.3fr_auto]">
@@ -115,6 +126,8 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
             <thead className="bg-white/[0.04] text-white/60">
               <tr>
                 <th className="px-4 py-3">Fecha</th>
+                <th className="px-4 py-3">Empresa</th>
+                <th className="px-4 py-3">Contacto</th>
                 <th className="px-4 py-3">Rubro</th>
                 <th className="px-4 py-3">Perfil</th>
                 <th className="px-4 py-3">Impacto mensual</th>
@@ -126,7 +139,7 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
             <tbody className="divide-y divide-white/10">
               {surveys.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-5 text-white/58" colSpan={7}>
+                  <td className="px-4 py-5 text-white/58" colSpan={9}>
                     Todavia no hay diagnosticos relevados para estos filtros.
                   </td>
                 </tr>
@@ -134,6 +147,11 @@ export function DiagnosticSurveyDashboard({ initialSurveys }: { initialSurveys: 
                 surveys.map((item) => (
                   <tr key={item.id}>
                     <td className="px-4 py-3">{new Date(item.createdAt).toLocaleDateString("es-AR")}</td>
+                    <td className="px-4 py-3">{item.companyName || "No informado"}</td>
+                    <td className="px-4 py-3">
+                      <div>{item.contactName || "No informado"}</div>
+                      {item.contactEmail ? <div className="text-xs text-white/50">{item.contactEmail}</div> : null}
+                    </td>
                     <td className="px-4 py-3">{item.rubroOtro || getRubroLabel(item.rubro)}</td>
                     <td className="px-4 py-3">{item.perfil}</td>
                     <td className="px-4 py-3">{currency.format(item.totalImpactMonthly)}</td>

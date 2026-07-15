@@ -105,6 +105,11 @@ async function upstashCommand<T>(config: RemoteDbConfig, command: unknown[]): Pr
 function normalizeDiagnosticSurvey(item: DiagnosticSurveyRecord): DiagnosticSurveyRecord {
   return {
     ...item,
+    companyName: item.companyName?.trim(),
+    contactName: item.contactName?.trim(),
+    contactRole: item.contactRole?.trim(),
+    contactEmail: item.contactEmail?.trim().toLowerCase(),
+    contactWhatsapp: item.contactWhatsapp?.trim(),
     rubro: item.rubro.trim(),
     rubroOtro: item.rubroOtro?.trim(),
     empleados: item.empleados.trim(),
@@ -353,6 +358,11 @@ async function writeDb(db: EventsDb): Promise<EventsDb> {
     })),
     diagnosticSurveys: (db.diagnosticSurveys ?? []).map((item) => ({
       ...item,
+      companyName: item.companyName?.trim(),
+      contactName: item.contactName?.trim(),
+      contactRole: item.contactRole?.trim(),
+      contactEmail: item.contactEmail?.trim().toLowerCase(),
+      contactWhatsapp: item.contactWhatsapp?.trim(),
       rubro: item.rubro.trim(),
       rubroOtro: item.rubroOtro?.trim(),
       empleados: item.empleados.trim(),
@@ -639,6 +649,11 @@ export async function recordDiagnosticSurvey(state: DiagnosticoState, result: Di
   const survey: DiagnosticSurveyRecord = {
     id: createId(),
     createdAt: now(),
+    companyName: state.company.empresa?.trim() || undefined,
+    contactName: state.company.nombre?.trim() || undefined,
+    contactRole: state.company.cargo?.trim() || undefined,
+    contactEmail: state.company.email?.trim().toLowerCase() || undefined,
+    contactWhatsapp: state.company.whatsapp?.trim() || undefined,
     rubro: state.profile.rubro || "sin-rubro",
     rubroOtro: state.profile.rubroOtro?.trim() || undefined,
     empleados: state.company.empleados || "No informado",
@@ -690,6 +705,11 @@ export async function buildCsvForDiagnosticSurveys(filters?: { from?: string | n
   const surveys = await getDiagnosticSurveys(filters);
   const header = [
     "fecha",
+    "empresa",
+    "nombre_contacto",
+    "cargo_contacto",
+    "email_contacto",
+    "whatsapp_contacto",
     "rubro",
     "rubro_otro",
     "empleados",
@@ -707,6 +727,11 @@ export async function buildCsvForDiagnosticSurveys(filters?: { from?: string | n
   const rows = surveys.map((item) =>
     [
       quoteCsvValue(item.createdAt),
+      quoteCsvValue(item.companyName ?? ""),
+      quoteCsvValue(item.contactName ?? ""),
+      quoteCsvValue(item.contactRole ?? ""),
+      quoteCsvValue(item.contactEmail ?? ""),
+      quoteCsvValue(item.contactWhatsapp ?? ""),
       quoteCsvValue(item.rubro),
       quoteCsvValue(item.rubroOtro ?? ""),
       quoteCsvValue(item.empleados),

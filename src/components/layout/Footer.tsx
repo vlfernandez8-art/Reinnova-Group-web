@@ -16,6 +16,8 @@ export function Footer() {
           <Link href="/#metodologia">Metodología</Link>
           <Link href="/diagnostico">Diagnóstico gratuito</Link>
           <Link href="/#contacto">Contacto</Link>
+          <Link href="/politica-de-privacidad">Política de privacidad</Link>
+          <Link href="/terminos-de-uso">Términos de uso</Link>
         </div>
         <div className="grid gap-3 text-sm text-white/72">
           <span className="flex items-center gap-2"><Mail size={16} /> administracion@reinnova.com.ar</span>
@@ -24,7 +26,7 @@ export function Footer() {
         </div>
       </div>
       <div className="section-shell mt-10 flex flex-col justify-between gap-3 border-t border-white/10 pt-6 text-xs text-muted md:flex-row">
-        <span>© 2025 Reinnova Group · Neuquén, Argentina</span>
+        <span>© {new Date().getFullYear()} Reinnova Group · Neuquén, Argentina</span>
         <span>Desarrollado por Reinnova Group</span>
       </div>
     </footer>
