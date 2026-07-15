@@ -1,0 +1,38 @@
+import { type DiagnosticSurveyRecord } from "@/lib/eventsTypes";
+
+export const diagnosticSurveySeed: DiagnosticSurveyRecord[] = [
+  {
+    id: "5040d2c8-9515-4abf-b60d-938058965153",
+    createdAt: "2026-07-06T18:31:23.340Z",
+    rubro: "logistica",
+    empleados: "1-5",
+    facturacion: "+$50M",
+    perfil: "B",
+    perfilTitulo: "Empresa en Desarrollo",
+    maturityScore: 62,
+    totalImpactMonthly: 3201754,
+    totalImpactAnnual: 38421048,
+    cyberMaturityScore: 69,
+    cyberRiskLevel: "Medio",
+    cyberRecoveryDays: 3,
+    cyberImpactMonthly: 127754,
+    cyberImpactAnnual: 1533048,
+  },
+  {
+    id: "bed03268-cd9f-4f66-9609-cadff6de4bce",
+    createdAt: "2026-07-06T19:06:17.848Z",
+    rubro: "logistica",
+    empleados: "1-5",
+    facturacion: "+$50M",
+    perfil: "B",
+    perfilTitulo: "Empresa en Desarrollo",
+    maturityScore: 62,
+    totalImpactMonthly: 3201754,
+    totalImpactAnnual: 38421048,
+    cyberMaturityScore: 69,
+    cyberRiskLevel: "Medio",
+    cyberRecoveryDays: 3,
+    cyberImpactMonthly: 127754,
+    cyberImpactAnnual: 1533048,
+  },
+];

@@ -19,6 +19,7 @@ import {
   type RegistrationRecord,
 } from "@/lib/eventsTypes";
 import { type DiagnosticResult, type DiagnosticoState } from "@/lib/types";
+import { diagnosticSurveySeed } from "@/lib/diagnosticSeed";
 
 type EventsDb = {
   events: EventRecord[];
@@ -167,7 +168,14 @@ async function readRemoteDiagnosticSurveys(config: RemoteDbConfig): Promise<Diag
     await Promise.all(legacyMissingFromList.map((item) => appendRemoteDiagnosticSurvey(config, item)));
   }
 
-  return dedupeDiagnosticSurveys([...listSurveys, ...legacySurveys]).map(normalizeDiagnosticSurvey);
+  const storedSurveys = dedupeDiagnosticSurveys([...listSurveys, ...legacySurveys]);
+  const storedIds = new Set(storedSurveys.map((item) => item.id));
+  const missingSeedSurveys = diagnosticSurveySeed.filter((item) => !storedIds.has(item.id));
+  if (missingSeedSurveys.length > 0) {
+    await Promise.all(missingSeedSurveys.map((item) => appendRemoteDiagnosticSurvey(config, item)));
+  }
+
+  return dedupeDiagnosticSurveys([...storedSurveys, ...missingSeedSurveys]).map(normalizeDiagnosticSurvey);
 }
 
 async function appendRemoteDiagnosticSurvey(config: RemoteDbConfig, survey: DiagnosticSurveyRecord) {
@@ -719,48 +727,6 @@ export async function getDiagnosticSurveys(filters?: { from?: string | null; to?
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map(stripUndefined);
-}
-
-export async function importDiagnosticSurveys(items: DiagnosticSurveyRecord[]) {
-  const validItems = dedupeDiagnosticSurveys(items.filter(isImportableDiagnosticSurvey)).map(normalizeDiagnosticSurvey);
-  const remoteConfig = getRemoteDbConfig();
-
-  if (remoteConfig) {
-    const existing = await readRemoteDiagnosticSurveys(remoteConfig);
-    const existingIds = new Set(existing.map((item) => item.id));
-    const missing = validItems.filter((item) => !existingIds.has(item.id));
-    await Promise.all(missing.map((item) => appendRemoteDiagnosticSurvey(remoteConfig, item)));
-    return { imported: missing.length, total: existing.length + missing.length };
-  }
-
-  const db = await readDb();
-  const existingIds = new Set(db.diagnosticSurveys.map((item) => item.id));
-  const missing = validItems.filter((item) => !existingIds.has(item.id));
-  db.diagnosticSurveys.push(...missing);
-  await writeDb(db);
-  return { imported: missing.length, total: db.diagnosticSurveys.length };
-}
-
-function isImportableDiagnosticSurvey(item: DiagnosticSurveyRecord) {
-  return Boolean(
-    item &&
-      typeof item.id === "string" &&
-      typeof item.createdAt === "string" &&
-      !Number.isNaN(new Date(item.createdAt).getTime()) &&
-      typeof item.rubro === "string" &&
-      typeof item.empleados === "string" &&
-      typeof item.facturacion === "string" &&
-      typeof item.perfil === "string" &&
-      typeof item.perfilTitulo === "string" &&
-      typeof item.cyberRiskLevel === "string" &&
-      Number.isFinite(item.maturityScore) &&
-      Number.isFinite(item.totalImpactMonthly) &&
-      Number.isFinite(item.totalImpactAnnual) &&
-      Number.isFinite(item.cyberMaturityScore) &&
-      Number.isFinite(item.cyberRecoveryDays) &&
-      Number.isFinite(item.cyberImpactMonthly) &&
-      Number.isFinite(item.cyberImpactAnnual),
-  );
 }
 
 export async function buildCsvForDiagnosticSurveys(filters?: { from?: string | null; to?: string | null; rubro?: string | null }) {
