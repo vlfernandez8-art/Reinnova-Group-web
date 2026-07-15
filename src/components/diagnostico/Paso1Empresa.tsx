@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,6 +47,7 @@ const schema = z.object({
   whatsapp: z.string().optional(),
   empleados: z.string().min(1, "Seleccioná cantidad de empleados"),
   facturacion: z.string().min(1, "Seleccioná facturación"),
+  privacyAccepted: z.boolean().refine((accepted) => accepted, "Debés aceptar la Política de Privacidad y los Términos de Uso"),
 });
 type CompanyFormValues = z.infer<typeof schema>;
 
@@ -67,7 +69,7 @@ export function Paso1Empresa({
     formState: { errors },
   } = useForm<CompanyFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: value,
+    defaultValues: { ...value, privacyAccepted: false },
   });
 
   const selectedEmployees = watch("empleados");
@@ -100,6 +102,7 @@ export function Paso1Empresa({
         onSelect={(item) => setValue("empleados", item, { shouldValidate: true })}
         error={errors.empleados?.message}
       />
+
       <ChoiceGroup
         label="Facturación mensual aproximada en ARS"
         options={revenues}
@@ -107,6 +110,22 @@ export function Paso1Empresa({
         onSelect={(item) => setValue("facturacion", item, { shouldValidate: true })}
         error={errors.facturacion?.message}
       />
+
+      <label className="flex items-start gap-3 rounded border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/72">
+        <input type="checkbox" className="mt-1 h-4 w-4 accent-cyan-400" {...register("privacyAccepted")} />
+        <span>
+          Declaro haber leído y acepto la{" "}
+          <Link href="/politica-de-privacidad" target="_blank" className="font-bold text-accent underline underline-offset-4">
+            Política de Privacidad
+          </Link>{" "}
+          y los{" "}
+          <Link href="/terminos-de-uso" target="_blank" className="font-bold text-accent underline underline-offset-4">
+            Términos de Uso
+          </Link>
+          , y autorizo el tratamiento de mis datos para generar el diagnóstico y recibir comunicaciones relacionadas con mi solicitud.
+          {errors.privacyAccepted ? <span className="mt-1 block text-xs text-danger">{errors.privacyAccepted.message}</span> : null}
+        </span>
+      </label>
 
       <button className="rounded bg-accent px-6 py-4 font-bold text-black transition hover:bg-white" type="submit">
         Continuar

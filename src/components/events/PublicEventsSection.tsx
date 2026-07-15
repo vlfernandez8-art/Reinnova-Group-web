@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, Clock3, Globe, MessageCircle } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { type PublicEventRecord } from "@/lib/eventsTypes";
 
@@ -28,6 +29,7 @@ export function PublicEventsSection({ events }: { events: PublicEventRecord[] })
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   const hasEvents = events.length > 0;
 
@@ -35,6 +37,7 @@ export function PublicEventsSection({ events }: { events: PublicEventRecord[] })
     setSelectedEvent(null);
     setFormValues(INITIAL_FORM);
     setErrorMessage("");
+    setPrivacyAccepted(false);
   };
 
   const updateField = (key: keyof RegistrationValues, value: string) => {
@@ -57,6 +60,12 @@ export function PublicEventsSection({ events }: { events: PublicEventRecord[] })
     if (!payload.fullName || !payload.company || !payload.position || !payload.email || !payload.phone) {
       setSaving(false);
       setErrorMessage("Completa todos los campos obligatorios.");
+      return;
+    }
+
+    if (!privacyAccepted) {
+      setSaving(false);
+      setErrorMessage("Debés aceptar la Política de Privacidad y los Términos de Uso.");
       return;
     }
 
@@ -210,6 +219,25 @@ export function PublicEventsSection({ events }: { events: PublicEventRecord[] })
                   onChange={(event) => updateField("phone", event.target.value)}
                   placeholder="Tu numero de telefono"
                 />
+              </label>
+              <label className="flex items-start gap-3 rounded border border-white/10 bg-white/[0.03] p-3 text-sm leading-5 text-white/72">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 accent-cyan-400"
+                  checked={privacyAccepted}
+                  onChange={(event) => setPrivacyAccepted(event.target.checked)}
+                />
+                <span>
+                  Acepto la{" "}
+                  <Link href="/politica-de-privacidad" target="_blank" className="font-bold text-accent underline underline-offset-4">
+                    Política de Privacidad
+                  </Link>{" "}
+                  y los{" "}
+                  <Link href="/terminos-de-uso" target="_blank" className="font-bold text-accent underline underline-offset-4">
+                    Términos de Uso
+                  </Link>{" "}
+                  para gestionar mi inscripción y recibir comunicaciones relacionadas con el evento.
+                </span>
               </label>
               {errorMessage ? <p className="rounded border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">{errorMessage}</p> : null}
               {successMessage ? <p className="rounded border border-success/35 bg-success/10 px-3 py-2 text-sm text-success">{successMessage}</p> : null}
